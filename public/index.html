@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f7fb">
+    <title>Quiz App — Server status</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Quiz App home">
+          <span class="brand-mark" aria-hidden="true">Q</span>
+          <span>Quiz App</span>
+        </a>
+        <span class="environment">Development</span>
+      </header>
+
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">SERVER STATUS</p>
+        <h1 id="page-title">Your quiz app is ready to build.</h1>
+        <p class="intro-copy">
+          The Express server is running. Check the API and PostgreSQL connection below.
+        </p>
+      </section>
+
+      <section class="status-grid" aria-label="Service health">
+        <article class="status-card">
+          <div class="card-heading">
+            <span class="service-icon api-icon" aria-hidden="true">&lt;/&gt;</span>
+            <span class="card-label">Express API</span>
+          </div>
+          <p class="status-value" id="api-status" role="status">Checking…</p>
+          <p class="card-detail">GET <code>/api/health</code></p>
+        </article>
+
+        <article class="status-card">
+          <div class="card-heading">
+            <span class="service-icon db-icon" aria-hidden="true">▤</span>
+            <span class="card-label">PostgreSQL</span>
+          </div>
+          <p class="status-value" id="database-status" role="status">Checking…</p>
+          <p class="card-detail">GET <code>/api/health/database</code></p>
+        </article>
+      </section>
+
+      <footer class="footer">
+        <span class="footer-dot" aria-hidden="true"></span>
+        <span>Node.js 24 · Express 5 · PostgreSQL</span>
+      </footer>
+    </main>
+  </body>
+</html>
