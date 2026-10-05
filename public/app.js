@@ -1,19 +1,27 @@
-async function showHealth(endpoint, elementId, successLabel) {
-  const status = document.getElementById(elementId);
+const menuToggle = document.querySelector(".menu-toggle");
+const primaryNav = document.querySelector("#primary-nav");
 
-  try {
-    const response = await fetch(endpoint);
-    if (!response.ok) {
-      throw new Error(`Health check returned ${response.status}`);
-    }
+function closeMenu() {
+  if (!menuToggle || !primaryNav) return;
 
-    status.textContent = successLabel;
-    status.dataset.state = "ok";
-  } catch {
-    status.textContent = "Unavailable";
-    status.dataset.state = "error";
-  }
+  menuToggle.setAttribute("aria-expanded", "false");
+  menuToggle.setAttribute("aria-label", "Open menu");
+  primaryNav.classList.remove("is-open");
 }
 
-showHealth("/api/health", "api-status", "Online");
-showHealth("/api/health/database", "database-status", "Connected");
+if (menuToggle && primaryNav) {
+  menuToggle.addEventListener("click", () => {
+    const isOpen = menuToggle.getAttribute("aria-expanded") === "true";
+    menuToggle.setAttribute("aria-expanded", String(!isOpen));
+    menuToggle.setAttribute("aria-label", isOpen ? "Open menu" : "Close menu");
+    primaryNav.classList.toggle("is-open", !isOpen);
+  });
+
+  primaryNav.addEventListener("click", (event) => {
+    if (event.target.closest("a")) closeMenu();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeMenu();
+  });
+}
