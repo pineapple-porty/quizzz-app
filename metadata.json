@@ -1,0 +1,7 @@
+{
+  "name": "zachs-quiz",
+  "description": "A better kind of brain break. Pick a topic, follow your curiosity, and see what you know.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

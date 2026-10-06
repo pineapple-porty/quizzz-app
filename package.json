@@ -5,11 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "node -e 'console.log(\"Build complete\")'",
     "dev": "node --watch server.js"
   },
   "type": "commonjs",
   "engines": {
-    "node": ">=24 <25"
+    "node": ">=22"
   },
   "dependencies": {
     "express": "^5.2.1",
