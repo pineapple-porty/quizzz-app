@@ -19,25 +19,19 @@
 
 ## Documentation index — `AI_docs/`
 
-The design spec is split into one file per topic. Most files are currently **stubs** (empty, awaiting content) — their purpose is listed so you know what a file will cover *before* you are told to read it.
+Docs are created **one at a time**: a file is only added to `AI_docs/` once its content is finished, and it is committed together with a row in this index.
+
+**Currently documented:** *(none yet)*
 
 | File | Title | Purpose |
-|---|---|---
-| `01-overview.md` | Chapter 1 — Overview | What the Quizzz App is, the current tech stack, and what these docs are for. |
-| `02-goals-non-goals.md` | Chapter 2 — Goals & Non-Goals | What the project must achieve, what is explicitly out of scope, and the definition of done. |
-| `03-pages-routes.md` | Chapter 3 — Pages & Routes | Every page of the site (Home, Quiz, Results), its URL route, and its required behavior. |
-| `04-design-system.md` | Chapter 4 — Design System | Colors, typography, layout, UI components, and motion rules used across the whole site. |
-| `05-data-model-api.md` | Chapter 5 — Data Model & API | The shape of quiz/question data and the backend endpoints that serve and score it. |
-| `06-accessibility.md` | Chapter 6 — Accessibility | Keyboard navigation, focus states, contrast, and ARIA requirements the site must meet. |
-| `07-responsiveness.md` | Chapter 7 — Responsiveness | Supported screen widths, mobile-first rules, touch targets, and breakpoints. |
-| `08-open-questions.md` | Chapter 8 — Open Questions | Unresolved design decisions that are still pending. Answers here update other chapters. |
-| `09-changelog.md` | Chapter 9 — Changelog | Log of every change made to any doc in AI_docs/, with dates. |
+|---|---|---|
+| — | — | No docs in `AI_docs/` yet |
 
-*(When new documents are added to `AI_docs/`, add a row here with a one-line description. Never edit this table without also keeping it accurate.)*
+*(When a finished doc is committed, add a row here with its file name, title, and a one-line description. Never edit this table without also keeping it accurate.)*
 
 ## Rules of engagement
 
 - Read this file → get assigned a doc → read ONLY that doc → do the work → report what you read.
 - Never guess a spec detail: ask.
-- Spec changes go through the doc owner: update the relevant `AI_docs/` file and log it in `AI_docs/09-changelog.md`.
-- Stub files: do not write content into a stub unless explicitly instructed.
+- Docs are never written in bulk: one file is drafted, finished, approved, and committed at a time.
+- Commit policy: nothing is committed to this repo without Zachary's explicit approval.
