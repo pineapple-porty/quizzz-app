@@ -1,29 +1,38 @@
 # Design Sheet — Quizzz App
 
-> **READ ME FIRST — READING PROTOCOL**
+> **READ ME FIRST — READING PROTOCOL (for AI agents and humans)**
+> You are reading this file to help build the quizzz-app website.
 > This document is split into chapters. **Read ONLY the chapter you have been told to read.**
-> Do not read any other chapter unless you are explicitly instructed to do so.
-> Use the table of contents below to locate the chapter you need.
+> Do NOT read any other chapter unless explicitly instructed to. If your task seems to require
+> another chapter, stop and ask which one to read instead.
+> Chapters are self-contained unless a "Dependencies" line at the top of the chapter says otherwise.
+> Locate your chapter in the table of contents below (line numbers refer to this exact revision).
 
-**Repo:** pineapple-porty/quizzz-app · **Branch:** `design` · **Status:** Draft v0.2
+**Repo:** pineapple-porty/quizzz-app · **Branch:** `design` · **Status:** Draft v0.3
 
-**Note:** Line numbers refer to this file as currently committed. They may shift after edits — the links remain valid regardless.
+**How to work from this file (AI agents):**
+1. Confirm which chapter(s) you are assigned; do not read ahead.
+2. Line numbers in the TOC are exact for this revision. If the file has been edited since the last commit, locate chapters by their `## Chapter N — Title` heading instead.
+3. When you finish work based on a chapter, report what you implemented and which chapter you followed.
+4. If a spec detail is missing or ambiguous, ask — do not guess and do not read other chapters to infer it.
 
 ---
 
 ## Table of Contents
 
-1. [1. Overview](#1-overview) — line 25
-2. [2. Goals & Non-Goals](#2-goals-non-goals) — line 37
-3. [3. Pages & Routes](#3-pages-routes) — line 52
-4. [4. Design System](#4-design-system) — line 77
-5. [5. Data Model & API](#5-data-model-api) — line 114
-6. [6. Accessibility](#6-accessibility) — line 141
-7. [7. Responsiveness](#7-responsiveness) — line 151
-8. [8. Open Questions](#8-open-questions) — line 159
-9. [9. Changelog](#9-changelog) — line 169
+1. Chapter 1 — Overview — starts at line 32
+2. Chapter 2 — Goals & Non-Goals — starts at line 48
+3. Chapter 3 — Pages & Routes — starts at line 67
+4. Chapter 4 — Design System — starts at line 96
+5. Chapter 5 — Data Model & API — starts at line 135
+6. Chapter 6 — Accessibility — starts at line 166
+7. Chapter 7 — Responsiveness — starts at line 178
+8. Chapter 8 — Open Questions — starts at line 188
+9. Chapter 9 — Changelog — starts at line 200
 
-### 1. Overview
+## Chapter 1 — Overview
+
+*Self-contained: no dependencies on other chapters.*
 
 Quizzz App is a web-based quiz application. Users can take quizzes, answer multiple-choice questions, and see their results at the end.
 
@@ -33,9 +42,13 @@ Quizzz App is a web-based quiz application. Users can take quizzes, answer multi
 - Static frontend served from `public/`
 - Deployed on Replit (see `.replit`, `replit.md`)
 
+**What this document is:** the authoritative spec for how this site is designed and built. It is organized into numbered chapters so a reader (human or AI agent) can read exactly one chapter without needing the rest.
+
 ---
 
-### 2. Goals & Non-Goals
+## Chapter 2 — Goals & Non-Goals
+
+*Self-contained: no dependencies on other chapters.*
 
 **Goals:**
 - Simple, fast, mobile-friendly quiz experience
@@ -48,9 +61,13 @@ Quizzz App is a web-based quiz application. Users can take quizzes, answer multi
 - Multiplayer or real-time play
 - Leaderboards (candidate for later)
 
+**Definition of done for the project:** a user can open the home page, pick a quiz, answer every question, and see a final score screen that is correct and readable on mobile.
+
 ---
 
-### 3. Pages & Routes
+## Chapter 3 — Pages & Routes
+
+*Dependencies: visual styles come from Chapter 4 (Design System); screen widths from Chapter 7 (Responsiveness).*
 
 | Route | Page | Purpose |
 |---|---|---|
@@ -73,9 +90,13 @@ Quizzz App is a web-based quiz application. Users can take quizzes, answer multi
 - Pass/fail or grade band
 - Review list: each question with the user's answer and the correct answer
 
+Data for these screens is provided by the API in Chapter 5 (Data Model & API).
+
 ---
 
-### 4. Design System
+## Chapter 4 — Design System
+
+*Dependencies: used by every page in Chapter 3 (Pages & Routes).*
 
 **4.1 Colors (suggested palette)**
 
@@ -112,7 +133,9 @@ Quizzz App is a web-based quiz application. Users can take quizzes, answer multi
 
 ---
 
-### 5. Data Model & API
+## Chapter 5 — Data Model & API
+
+*Dependencies: consumed by the pages in Chapter 3 (Pages & Routes).*
 
 ```js
 quiz = {
@@ -124,7 +147,7 @@ quiz = {
     {
       id: string,
       text: string,
-      options: string[],
+      options: string[],   // 2–4 entries
       correctIndex: number,
       explanation?: string
     }
@@ -133,13 +156,17 @@ quiz = {
 ```
 
 **API (draft):**
-- `GET /api/quizzes` — list quizzes
+- `GET /api/quizzes` — list quizzes (no questions)
 - `GET /api/quizzes/:id` — full quiz
 - `POST /api/quizzes/:id/submit` — submit answers, receive score + correct answers
 
+**Storage:** currently in-memory via `src/db.js`. Final choice pending (see Chapter 8, Open Questions).
+
 ---
 
-### 6. Accessibility
+## Chapter 6 — Accessibility
+
+*Dependencies: applies to components defined in Chapter 4 (Design System) and pages in Chapter 3.*
 
 - Semantic HTML (`main`, `nav`, buttons for options)
 - Keyboard navigable answers (arrow keys / number keys)
@@ -149,7 +176,9 @@ quiz = {
 
 ---
 
-### 7. Responsiveness
+## Chapter 7 — Responsiveness
+
+*Dependencies: applies to the layout rules in Chapter 4 (Design System).*
 
 - Mobile-first; works 320px → 1440px+
 - Touch targets ≥ 44px
@@ -157,7 +186,9 @@ quiz = {
 
 ---
 
-### 8. Open Questions
+## Chapter 8 — Open Questions
+
+*Self-contained: decisions made here update other chapters via the Changelog (Chapter 9).*
 
 - [ ] Dark theme only, or light/dark toggle?
 - [ ] Instant feedback per question vs. results-only at the end?
@@ -167,9 +198,12 @@ quiz = {
 
 ---
 
-### 9. Changelog
+## Chapter 9 — Changelog
+
+*Self-contained: log every change to this document here.*
 
 | Date | Change |
 |---|---|
+| 2026-10-07 | Optimized for AI readers: chapter self-containment notes, explicit cross-references, AI work protocol |
 | 2026-10-07 | Restructured: TOC with line numbers + reading protocol notice |
 | 2026-10-07 | Initial draft created on `design` branch |
