@@ -21,11 +21,11 @@
 
 Docs are created **one at a time**: a file is only added to `AI_docs/` once its content is finished, and it is committed together with a row in this index.
 
-**Currently documented:** *(none yet)*
+**Currently documented:**
 
 | File | Title | Purpose |
 |---|---|---|
-| — | — | No docs in `AI_docs/` yet |
+| `AI_docs/git_instructions.md` | Git Instructions | Rules for committing, branching, and merging in this repo: never commit to `main` without explicit permission, always branch for new features, commit freely on your current branch, simple commit messages, merge only when told and only when the code is safe. |
 
 *(When a finished doc is committed, add a row here with its file name, title, and a one-line description. Never edit this table without also keeping it accurate.)*
 
