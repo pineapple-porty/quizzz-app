@@ -25,6 +25,7 @@ Docs are created **one at a time**: a file is only added to `AI_docs/` once its 
 
 | File | Title | Purpose |
 |---|---|---|
+| `AI_docs/design_specs.md` | Visual design system, color tokens, typography, and component specs |
 | `AI_docs/git_instructions.md` | Git Instructions | Rules for committing, branching, and merging in this repo: never commit to `main` without explicit permission, always branch for new features, commit freely on your current branch, simple commit messages, merge only when told and only when the code is safe. |
 
 *(When a finished doc is committed, add a row here with its file name, title, and a one-line description. Never edit this table without also keeping it accurate.)*
