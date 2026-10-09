@@ -7,9 +7,9 @@
 
 ## 1. General Theme & Visual Direction
 
-* **Style Reference:** Adobe.com marketing pages — bold, clean, modern, and playful.
-* **Base Atmosphere:** Predominantly clean, light blue-ish white structure with sharp `#000000` elements and high contrast, punctuated by vivid artwork and deliberate accent colors.
-* **Soft Points / Eye-Rest Areas:** Muted, desaturated zones placed between high-contrast sections to prevent visual fatigue. A soft point's background or ambient tint is dynamically derived from the dominant colors of the image or collection of images in that immediate section, creating a seamless visual transition where colors "meet in the middle."
+* **Style Reference:** Adobe.com **marketing pages** — bold, clean, modern, playful.
+* **Base Atmosphere:** Predominantly blue-ish white base (`#e6eefa`) with hard pure black (`#000000`) contrast, clean layout, strong typography. Vivid, bright artwork mixed in as deliberate contrast against the near-neutral structure.
+* **Soft Points / Eye-Rest Areas:** Muted, calm areas where colors meet in the middle — but **each color keeps its own identity** (muted, not fully blended into gray). Rest areas keep the page from feeling aggressive.
 
 ---
 
@@ -18,20 +18,47 @@
 ### Core Palette
 | Role | Token Name | Hex / Value | Description |
 | :--- | :--- | :--- | :--- |
-| **Base Background** | `--color-bg-base` | `#F4F7FA` | Primary page background (blue-ish white). |
+| **Base Background** | `--color-bg-base` | `#e6eefa` | Primary page background (blue-ish white). |
 | **Hard Contrast / Text** | `--color-text-main` | `#000000` | Pure black for primary text, borders, and structural contrast. |
 | **Surface White** | `--color-surface` | `#FFFFFF` | Clean white for elevated cards and inner containers. |
 
 ### Accent Palette
-| Role | Token Name | Recommended Hex | Description |
+| Role | Token Name | Base Hex | Description |
 | :--- | :--- | :--- | :--- |
-| **Accent Dark Blue** | `--color-accent-blue` | `#0B2C6B` | Primary CTAs, key brand highlights, and focal elements. |
-| **Accent Dark Red** | `--color-accent-red` | `#8B0000` | secondary CTAs, alert accents, and bold highlights. |
-| **Accent Dark Green** | `--color-accent-green` | `#0A4D2E` | Success indicators, positive badges, and grounded accents. |
+| **Accent Dark Blue** | `--color-accent-blue` | `#13489e` | Primary CTAs, key highlights, focal elements. |
+| **Accent Dark Red** | `--color-accent-red` | `#9e1313` | Secondary CTAs, alert accents, bold highlights. |
+| **Accent Dark Green** | `--color-accent-green` | `#159e13` | Success indicators, positive badges, grounded accents. |
 
-### Soft Point / Rest Area Rules
-* **Tint Derivation:** Soft points utilize a low-saturation (10–20% opacity or desaturated tint) sampled from adjacent section media/artwork.
-* **Boundary Rules:** No hard `#000000` borders inside soft point containers; soft points use gentle padding and low contrast to allow the eyes to rest.
+### Adaptive Accent Rule
+
+The three dark accents are **base values, not fixed ones**. They adapt to their surroundings:
+
+* On/near **white or light areas** → the accent gets **brighter** (a lighter, more vivid variant of the base color).
+* On/near **black** → the accent **stays the same, or brightens only slightly**.
+
+**Procedure (for anyone implementing):**
+1. When an accent is used in a new context, **ASK THE USER** what they want for this context.
+2. **PROPOSE the brighter variant yourself** — present the specific hex you think the brighter version should be.
+3. Once the user confirms a variant for that context, **NEVER ASK AGAIN** — the confirmed value is saved below and reused whenever that same context appears.
+
+**Confirmed accent variants (append after user approval — never ask again for these):**
+
+| Accent | Context | Confirmed Hex |
+| :--- | :--- | :--- |
+| *(none yet)* | | |
+
+### Soft Point Rules
+
+* **Character first:** a soft point's character is mainly based on **what the user has in mind**. Nearby image(s) are reference only — the user decides the feel.
+* **Ask before choosing:** when designing a soft point, **ASK THE USER about its general feel** before picking colors. Do not guess from artwork alone.
+* **Muted, not blended away:** soft points are muted, low-saturation colors that let the eye rest, but each color keeps its own identity (muted, not fully gray).
+* **Boundary rules:** no hard `#000000` borders inside soft point containers; soft points use gentle padding and low contrast.
+
+**Confirmed soft points (append after user approval — never ask again for these):**
+
+| Location / Area | General Feel (user's words) | Confirmed Colors |
+| :--- | :--- | :--- |
+| *(none yet)* | | |
 
 ---
 
@@ -52,20 +79,18 @@
 
 ### Buttons & Interactive Elements
 * **Primary Buttons:** Pure black background (`#000000`), white text (`#FFFFFF`), bold weight, clean rectangular or subtle 4px rounded corners.
-* **Accent Buttons:** Dark blue (`#0B2C6B`), dark red (`#8B0000`), or dark green (`#0A4D2E`) background depending on context.
+* **Accent Buttons:** Dark blue (`#13489e`), dark red (`#9e1313`), or dark green (`#159e13`) background depending on context — subject to the Adaptive Accent Rule above.
 * **Hover States:** Crisp, instant state transitions with hard contrast or offset drop shadows.
 
 ### Cards & Content Containers
 * **Standard Cards:** Clean surface white (`#FFFFFF`) background with a thin `#000000` border or high-contrast shadow.
 * **Artwork Cards:** High-energy containers showcasing bright, vivid art assets against the neutral base background.
-* **Soft Point Containers:** Borderless, desaturated background blocks derived from local image colors.
+* **Soft Point Containers:** Borderless, muted background blocks whose colors follow the Soft Point Rules above.
 
 ---
 
 ## 5. Responsiveness & Accessibility
 
 * **Layout Strategy:** Mobile-first fluid grid. High-density design prioritizing screen space efficiency.
-* **Contrast Thresholds:** All body text and primary interactive controls maintain strict WCAG AAA contrast against `--color-bg-base` (`#F4F7FA`) and `--color-surface` (`#FFFFFF`).
+* **Contrast Thresholds:** All body text and primary interactive controls maintain WCAG AA contrast (4.5:1) minimum against `#e6eefa` and `#FFFFFF`. (AAA 7:1 preferred where practical.)
 * **Motion:** Subtle, fast transitions (150ms–200ms ease). Respects `prefers-reduced-motion`.
-
----
