@@ -25,8 +25,9 @@ Docs are created **one at a time**: a file is only added to `AI_docs/` once its 
 
 | File | Title | Purpose |
 |---|---|---|
-| `AI_docs/design_instructions.md` |CSS/general design instructions| Visual design system, color tokens, typography, and component specs |
+| `AI_docs/design_instructions.md` | Design Specs | Visual design system: Adobe-marketing-page style, color tokens (`#e6eefa` base, `#000000` contrast, `#13489e`/`#9e1313`/`#159e13` accents), adaptive accent rule, soft point rules, DM Sans typography, component and motion specs. |
 | `AI_docs/git_instructions.md` | Git Instructions | Rules for committing, branching, and merging in this repo: never commit to `main` without explicit permission, always branch for new features, commit freely on your current branch, simple commit messages, merge only when told and only when the code is safe. |
+| `AI_docs/backend_specs.md` | Backend Specs | Backend architecture (Express 5 + Postgres pool + mock-pool fallback), approved schema (users, sessions, quizzes, attempts), the authoritative scoring/streak/level system (difficulty chart, streak multiplier ladder capped at ×10, noobie/easy halving, anti-farm replay rule), auth with 30-day rolling sessions, and the full target API. |
 
 *(When a finished doc is committed, add a row here with its file name, title, and a one-line description. Never edit this table without also keeping it accurate.)*
 
