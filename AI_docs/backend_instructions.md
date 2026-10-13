@@ -33,6 +33,7 @@
 5. Async handlers use `try/catch`; nothing throws to crash the process.
 6. When a table is created, add it to the schema section below in the same change.
 7. **Scoring, streaks, and levels are computed server-side only.** The client sends answers; the server decides everything else. Client-sent point values are always ignored.
+8. **Role naming:** the database role value is `teacher`. Any doc or instruction that says "admin" or "teacher/admin" refers to the same `teacher` role — there is no separate admin role.
 
 ---
 
@@ -78,10 +79,22 @@
 | quiz_id | `UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE` | |
 | position | `INTEGER NOT NULL` | question order within the quiz |
 | text | `TEXT NOT NULL` | |
-| options | `JSONB NOT NULL` | array of `{ text, options: string[4], correct_index }` — **exactly four choices, exactly one correct answer** |
-| correct_index | `INTEGER NOT NULL` | 0–3, index into options |
+| options | `JSONB NOT NULL` | array of **exactly four** choice strings |
+| correct_index | `INTEGER NOT NULL CHECK (correct_index BETWEEN 0 AND 3)` | exactly one correct answer |
 
 *Quizzes and questions are created and edited by **teacher accounts** through the question editor and CSV upload (see Part 4). Players cannot author content.*
+
+### assignments
+| Column | Type | Notes |
+|---|---|---|
+| id | `UUID PRIMARY KEY DEFAULT gen_random_uuid()` | |
+| quiz_id | `UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE` | the quiz being assigned |
+| player_id | `UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE` | who it is assigned to |
+| assigned_by | `UUID NOT NULL REFERENCES users(id)` | the teacher who assigned it |
+| assigned_at | `TIMESTAMPTZ NOT NULL DEFAULT now()` | |
+| completed_at | `TIMESTAMPTZ` | set when the player beats the quiz; null until then |
+
+*An **assignment** = a teacher assigning a quiz to a specific player. Teachers create and manage assignments; players see which quizzes are assigned to them and whether each is complete. Completing (beating) the assigned quiz marks it complete.*
 
 ### attempts
 | Column | Type | Notes |
@@ -148,6 +161,11 @@ if quiz was lost: awarded = 0 (but retrying a lost quiz for points is allowed)
 ### Extra features (declared)
 * The two additional functional features beyond the shared requirements are:
   **(1) the streak multiplier system, (2) the level system.**
+* **Build timing:** streak points and level calculation are implemented together with attempt saving (Phase 3 of the development plan); the quiz-play flow (Phase 2) shows raw score and percentage only.
+
+### Launch content
+* **Five quizzes ship at launch, each with at least 10 questions** (exactly four choices per question, exactly one correct).
+* Teachers author these through the question editor / CSV upload before launch.
 
 ---
 
@@ -164,6 +182,7 @@ if quiz was lost: awarded = 0 (but retrying a lost quiz for points is allowed)
 |---|---|---|
 | Play quizzes, earn points/streaks/levels | ✅ | ✅ (scores still count) |
 | View leaderboards and own attempt history | ✅ | ✅ |
+| See quizzes assigned to them / manage assignments | see own | create/manage |
 | Question editor: add/edit questions, choices, correct answers, quiz assignments | ❌ | ✅ |
 | CSV upload with preview & validation | ❌ | ✅ |
 
@@ -186,6 +205,12 @@ if quiz was lost: awarded = 0 (but retrying a lost quiz for points is allowed)
 * `GET /api/me/attempts` → newest first: `{ quiz_id, quiz_title, correct, total, percent, points_awarded, created_at }`.
 * A user can only ever see their own history.
 
+### Assignments
+* `GET /api/me/assignments` → quizzes assigned to the current player with completion status.
+* `POST /api/admin/assignments` → teacher assigns a quiz to a player.
+* `DELETE /api/admin/assignments/:id` → teacher removes an assignment.
+* When a player beats a quiz, any open assignment for that quiz is marked `completed_at = now()`.
+
 ### Teacher question editor & CSV upload
 * `POST /api/admin/quizzes` — create quiz (title, description, difficulty, base_points)
 * `PUT /api/admin/quizzes/:id` — edit quiz details
@@ -200,12 +225,13 @@ if quiz was lost: awarded = 0 (but retrying a lost quiz for points is allowed)
 * `POST /api/auth/logout` → `{ ok: true }`
 * `GET /api/me` → `{ username, role, points, level, streak_count, best_streak, created_at }` or `401`
 * `GET /api/me/attempts` → own attempt history (auth required)
+* `GET /api/me/assignments` → own assignments (auth required)
 * `GET /api/quizzes` → list: `{ id, title, description, difficulty }` (no questions)
 * `GET /api/quizzes/:id` → full quiz with questions/options, **no `correct_index`**
 * `POST /api/quizzes/:id/submit` → body `{ answers: number[] }` → `{ correct, total, percent, beaten, points_awarded, multiplier_applied, new_streak, level, review: [{ question, your_answer, correct_index }] }` (auth required)
 * `GET /api/leaderboard` → overall leaderboard (public)
 * `GET /api/quizzes/:id/leaderboard` → per-quiz leaderboard (public)
-* Admin endpoints listed in the question editor section (teacher role required)
+* Admin endpoints listed in the question editor and assignments sections (teacher role required)
 
 ---
 
@@ -214,6 +240,7 @@ if quiz was lost: awarded = 0 (but retrying a lost quiz for points is allowed)
 2. Schema changes: propose here first; build only after user approval.
 3. Every new endpoint gets the standard error shape and `try/catch` handler.
 4. Mock-pool mode must keep the app bootable at all times.
+5. Follow `AI_docs/agent_development.md` for the five-phase build order, QA workflow, and merge gates.
 
 ---
 
