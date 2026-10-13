@@ -8,9 +8,10 @@
 ## Part 1 — Backend Architecture
 
 ### Stack
-* **Node.js ≥ 22** (CommonJS), **Express 5**, **PostgreSQL** via the `pg` library (pooled).
+* **Node.js 24 LTS** (CommonJS), **Express 5**, **PostgreSQL** via the `pg` library (pooled).
 * Entry point: `server.js`. Database access: `src/db.js` (exports `pool`).
 * Frontend: static files in `public/`, served by Express; all dynamic data comes from `/api/...`.
+* `package.json` engines must require `>=24`; `package-lock.json` is committed.
 
 ### Server behavior (verified against the code)
 * `app.disable("x-powered-by")`; JSON bodies parsed with a **1 MB limit**.
@@ -22,7 +23,7 @@
 ### Database layer (`src/db.js`)
 * `DATABASE_URL` set → real pool: max 10 connections, 30s idle timeout, 5s connect timeout.
 * `DATABASE_URL` missing → **mock pool** returning empty rows. The app boots and serves empty data. **Never assume real data when the env var is absent.**
-* Env: `PORT` (default 3000), `DATABASE_URL`, plus `SESSION_SECRET` (see auth).
+* Env: `PORT` (default 3000), `DATABASE_URL`, plus `SESSION_SECRET` (see auth). All secrets are Replit Secrets, set per environment.
 
 ### Standing backend rules (for anyone adding code)
 1. All endpoints under `/api/...`. Static files only from `public/`.
@@ -43,7 +44,8 @@
 | Column | Type | Notes |
 |---|---|---|
 | id | `UUID PRIMARY KEY DEFAULT gen_random_uuid()` | |
-| username | `TEXT UNIQUE NOT NULL` | 3–20 chars, letters/numbers/underscore |
+| username | `TEXT UNIQUE NOT NULL` | 3–20 chars, letters/numbers/underscore; **usernames only, never email addresses** |
+| role | `TEXT NOT NULL DEFAULT 'player' CHECK (role IN ('player','teacher'))` | teachers get the admin endpoints |
 | password_hash | `TEXT NOT NULL` | bcrypt (cost 12); plaintext never stored, logged, or returned |
 | points | `INTEGER NOT NULL DEFAULT 0` | lifetime award total; level is derived from this |
 | streak_count | `INTEGER NOT NULL DEFAULT 0` | consecutive beaten quizzes, at any difficulty |
@@ -66,11 +68,20 @@
 | title | `TEXT NOT NULL` | |
 | description | `TEXT` | shown in quiz list |
 | difficulty | `TEXT NOT NULL CHECK (difficulty IN ('noobie','easy','medium','hard','very_hard','impossible'))` | |
-| base_points | `INTEGER NOT NULL` | within the difficulty chart range; set when the quiz JSON is authored |
-| questions | `JSONB NOT NULL` | array of `{ text, options: string[2..4], correct_index }` |
+| base_points | `INTEGER NOT NULL` | within the difficulty chart range; set when the quiz is authored |
 | created_at | `TIMESTAMPTZ NOT NULL DEFAULT now()` | |
 
-*Quizzes are **site-authored only** (developers create the JSON). User-created quizzes are a possible future feature — not built, not specced.*
+### questions
+| Column | Type | Notes |
+|---|---|---|
+| id | `UUID PRIMARY KEY DEFAULT gen_random_uuid()` | |
+| quiz_id | `UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE` | |
+| position | `INTEGER NOT NULL` | question order within the quiz |
+| text | `TEXT NOT NULL` | |
+| options | `JSONB NOT NULL` | array of `{ text, options: string[4], correct_index }` — **exactly four choices, exactly one correct answer** |
+| correct_index | `INTEGER NOT NULL` | 0–3, index into options |
+
+*Quizzes and questions are created and edited by **teacher accounts** through the question editor and CSV upload (see Part 4). Players cannot author content.*
 
 ### attempts
 | Column | Type | Notes |
@@ -79,18 +90,20 @@
 | user_id | `UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE` | |
 | quiz_id | `UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE` | |
 | correct | `INTEGER NOT NULL` | |
-| total | `INTEGER NOT NULL` | |
+| total | `INTEGER NOT NULL` | question count |
 | beaten | `BOOLEAN NOT NULL` | more than half correct |
 | points_awarded | `INTEGER NOT NULL` | 0 for replays/losses; includes multiplier & division |
 | multiplier_applied | `NUMERIC(4,1) NOT NULL DEFAULT 1.0` | audit trail |
-| created_at | `TIMESTAMPTZ NOT NULL DEFAULT now()` | |
+| created_at | `TIMESTAMPTZ NOT NULL DEFAULT now()` | completion date/time |
+
+*Every completed attempt, including retries, is saved as an `attempts` row. An attempt row is written **only at submit** — closing the page mid-quiz creates no row, so unfinished attempts never count as completions.*
 
 ---
 
 ## Part 3 — Scoring, Streak & Level System (authoritative)
 
 ### Difficulty chart & base points
-*Guide for whoever authors quiz JSON. `base_points` must fall inside the row's range.*
+*Guide for whoever authors quizzes. `base_points` must fall inside the row's range.*
 
 | Difficulty | Description | Base points |
 |---|---|---|
@@ -130,7 +143,11 @@ if quiz was lost: awarded = 0 (but retrying a lost quiz for points is allowed)
 * Level is **derived from `points`** — never stored separately.
 * `level = floor(sqrt(points / 50)) + 1`, capped at level 100.
 * Thresholds: L1 = 0 · L2 = 50 · L3 = 200 · L4 = 450 · L5 = 800 · L6 = 1250 · … · L10 = 4050.
-* Each level costs progressively more; the UI may show "points to next level" = `50 × level² − points`.
+* The UI may show "points to next level" = `50 × level² − points`.
+
+### Extra features (declared)
+* The two additional functional features beyond the shared requirements are:
+  **(1) the streak multiplier system, (2) the level system.**
 
 ---
 
@@ -140,20 +157,55 @@ if quiz was lost: awarded = 0 (but retrying a lost quiz for points is allowed)
 * Register: username + password. Password rules: 8+ chars, any characters. bcrypt cost 12.
 * Login creates a `sessions` row; cookie is `httpOnly`, `SameSite=Lax`, secure in production.
 * **Session lifetime: 30-day rolling** — extended on every authenticated request. Logout deletes the session row and clears the cookie.
-* Browsing and playing works logged-out; nothing is saved.
+* **Login is required to play a quiz.** Logged-out visitors can browse the quiz list and view leaderboards, but must register/log in to start a quiz. Rationale: every completed attempt must be saved with a user — anonymous play cannot satisfy that rule.
+
+### Roles & permissions
+| Action | Player | Teacher |
+|---|---|---|
+| Play quizzes, earn points/streaks/levels | ✅ | ✅ (scores still count) |
+| View leaderboards and own attempt history | ✅ | ✅ |
+| Question editor: add/edit questions, choices, correct answers, quiz assignments | ❌ | ✅ |
+| CSV upload with preview & validation | ❌ | ✅ |
+
+* The server checks `role` on every admin endpoint — the client never decides.
+* The first teacher account is promoted manually in the database (one-time setup step).
 
 ### Quiz data & user info (all from the server)
 * Quiz content is fetched from the API — never hardcoded in the frontend.
 * `correct_index` is **never sent to the client** during play; grading is server-side only.
 
+### Results screen
+* After submit, the player sees: **score (correct/total), percentage correct, points awarded, multiplier applied, current streak, and level** — then a question-by-question review (their answer vs. correct). Buttons: "Retry" and "Back to quizzes."
+
+### Leaderboards (usernames only, never emails)
+* `GET /api/leaderboard` — **overall**: all users ranked by **total completed attempts** (desc); ties share the same rank. Shows username, completed attempts, level.
+* `GET /api/quizzes/:id/leaderboard` — **per quiz**: each user's **highest score** and **number of completed attempts**, ranked by highest score (desc); ties broken by earlier first completion, then fewer attempts.
+* Both leaderboards are public — visible while logged out.
+
+### Attempt history
+* `GET /api/me/attempts` → newest first: `{ quiz_id, quiz_title, correct, total, percent, points_awarded, created_at }`.
+* A user can only ever see their own history.
+
+### Teacher question editor & CSV upload
+* `POST /api/admin/quizzes` — create quiz (title, description, difficulty, base_points)
+* `PUT /api/admin/quizzes/:id` — edit quiz details
+* `POST /api/admin/quizzes/:id/questions` — add question
+* `PUT /api/admin/questions/:id` — edit question text, choices, correct answer
+* `DELETE /api/admin/questions/:id` — remove question
+* **CSV upload:** `POST /api/admin/quizzes/:id/upload` — teacher uploads a CSV using the standard template (columns: `question,choice_a,choice_b,choice_c,choice_d,correct_letter`). The server returns a **preview**: valid rows plus invalid rows with row numbers and reasons (missing column, not exactly four choices, bad correct letter). Nothing is saved until the teacher confirms; then `POST /api/admin/quizzes/:id/import` imports only the valid rows.
+
 ### Endpoints (target API)
 * `POST /api/auth/register` → `{ username }` or `409` if taken
 * `POST /api/auth/login` → `{ username }` + session cookie, or `401`
 * `POST /api/auth/logout` → `{ ok: true }`
-* `GET /api/me` → `{ username, points, level, streak_count, best_streak, created_at }` or `401`
+* `GET /api/me` → `{ username, role, points, level, streak_count, best_streak, created_at }` or `401`
+* `GET /api/me/attempts` → own attempt history (auth required)
 * `GET /api/quizzes` → list: `{ id, title, description, difficulty }` (no questions)
 * `GET /api/quizzes/:id` → full quiz with questions/options, **no `correct_index`**
-* `POST /api/quizzes/:id/submit` → body `{ answers: number[] }` → `{ correct, total, beaten, points_awarded, multiplier_applied, new_streak, level, review: [{ question, your_answer, correct_index }] }` (auth required)
+* `POST /api/quizzes/:id/submit` → body `{ answers: number[] }` → `{ correct, total, percent, beaten, points_awarded, multiplier_applied, new_streak, level, review: [{ question, your_answer, correct_index }] }` (auth required)
+* `GET /api/leaderboard` → overall leaderboard (public)
+* `GET /api/quizzes/:id/leaderboard` → per-quiz leaderboard (public)
+* Admin endpoints listed in the question editor section (teacher role required)
 
 ---
 
@@ -162,3 +214,13 @@ if quiz was lost: awarded = 0 (but retrying a lost quiz for points is allowed)
 2. Schema changes: propose here first; build only after user approval.
 3. Every new endpoint gets the standard error shape and `try/catch` handler.
 4. Mock-pool mode must keep the app bootable at all times.
+
+---
+
+## Part 6 — Environments & deployment
+* **QA environment:** the Replit development workspace, with its own Postgres database.
+* **Production:** Replit Deployment, with a **separate production database**.
+* `DATABASE_URL` and `SESSION_SECRET` are Replit Secrets, set separately per environment.
+* The same stack runs in both environments; persistent data survives app restarts.
+* `package-lock.json` is committed; Node 24 LTS is required everywhere.
+* All required features must work in the deployed app, not just in QA.
