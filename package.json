@@ -10,7 +10,7 @@
   },
   "type": "commonjs",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "dependencies": {
     "express": "^5.2.1",

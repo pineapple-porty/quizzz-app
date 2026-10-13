@@ -1,0 +1,40 @@
+# AGENTS.md — READ THIS FIRST
+
+> ## ⚠️ MANDATORY READING PROTOCOL — APPLIES TO AI AGENTS AND HUMANS
+>
+> **You will NOT read more than you are told to read.**
+>
+> 1. This is the ONLY file you may read freely. Read it fully before editing anything in this repository.
+> 2. All other documentation lives in the `AI_docs/` folder, listed in the index below.
+> 3. **Do NOT open any file in `AI_docs/` unless you have been explicitly told to read that exact file.**
+> 4. Do NOT read files "just to get context." If your task seems to require a file you were not assigned, **STOP and ask which file to read instead.**
+> 5. Each doc in `AI_docs/` is an independent, self-contained file. If it depends on another doc, it says so explicitly inside the file.
+> 6. When you finish, report which files you read.
+
+---
+
+## What this repository is
+
+**Quizzz App** — a web-based quiz application. Node.js + Express backend (`server.js`), data layer in `src/db.js`, static frontend in `public/`, hosted on Replit.
+
+## Documentation index — `AI_docs/`
+
+Docs are created **one at a time**: a file is only added to `AI_docs/` once its content is finished, and it is committed together with a row in this index.
+
+**Currently documented:**
+
+| File | Title | Purpose |
+|---|---|---|
+| `AI_docs/agent_development.md` | Agent Development Contract | Five-phase build order with isolated feature branches, QA-in-Replit workflow, phase acceptance gates, test policy, database/deployment safety rules, and mandatory agent response formats. "Admin" in this file means the `teacher` role. |
+| `AI_docs/backend_instructions.md` | Backend Instructions | Backend architecture (Express 5 + Postgres pool + mock-pool fallback), approved schema (users with player/teacher roles, sessions, quizzes, questions, assignments, attempts), the authoritative scoring/streak/level system (difficulty chart, streak multiplier ladder capped at ×10, noobie/easy halving, anti-farm replay rule, built in Phase 3), auth with 30-day rolling sessions and login-required-to-play, overall and per-quiz leaderboards, attempt history, teacher question editor with CSV preview/validated upload, quiz assignments, five-launch-quiz content rule, the full target API, and QA/production environment rules (Node 24 LTS, Replit Secrets, package-lock.json committed). |
+| `AI_docs/design_instructions.md` | Design Specs | Visual design system: Adobe-marketing-page style, color tokens (`#e6eefa` base, `#000000` contrast, `#13489e`/`#9e1313`/`#159e13` accents), adaptive accent rule, soft point rules, DM Sans typography, component and motion specs. |
+| `AI_docs/git_instructions.md` | Git Instructions | Rules for committing, branching, and merging in this repo: never commit to `main` without explicit permission, always branch for new features, commit freely on your current branch, simple commit messages, merge only when told and only when the code is safe. |
+
+*(When a finished doc is committed, add a row here with its file name, title, and a one-line description. Never edit this table without also keeping it accurate.)*
+
+## Rules of engagement
+
+- Read this file → get assigned a doc → read ONLY that doc → do the work → report what you read.
+- Never guess a spec detail: ask.
+- Docs are never written in bulk: one file is drafted, finished, approved, and committed at a time.
+- Commit policy: nothing is committed to this repo without Zachary's explicit approval.
