@@ -45,7 +45,9 @@ The three dark accents are **base values, not fixed ones**. They adapt to their 
 
 | Accent | Context | Confirmed Hex |
 | :--- | :--- | :--- |
-| *(none yet)* | | |
+| Blue | Light backgrounds (topic-card artwork and quiz highlights) | `#2366C2` |
+| Red | Light backgrounds (topic-card artwork and quiz highlights) | `#C43B35` |
+| Green | Light backgrounds (topic-card artwork and quiz highlights) | `#237A28` |
 
 ### Soft Point Rules
 

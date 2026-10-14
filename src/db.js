@@ -1,29 +1,45 @@
 const { Pool } = require("pg");
 
-let pool;
-if (process.env.DATABASE_URL) {
-  try {
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      max: 10,
-      idleTimeoutMillis: 30_000,
-      connectionTimeoutMillis: 5_000,
-    });
-  } catch (err) {
-    console.warn("DB not connected — mock active", err);
+function buildPool() {
+  const hasDatabaseConfig = Boolean(
+    process.env.DATABASE_URL ||
+      process.env.PGHOST ||
+      process.env.PGUSER ||
+      process.env.PGDATABASE ||
+      process.env.PGPASSWORD ||
+      process.env.PGPORT,
+  );
+
+  if (!hasDatabaseConfig) {
+    console.warn("Database not connected — using mock");
+    return {
+      query: async () => ({ rows: [] }),
+      connect: async () => ({
+        query: async () => ({ rows: [] }),
+        release: () => {},
+      }),
+      end: async () => {},
+    };
   }
+
+  const config = process.env.DATABASE_URL
+    ? { connectionString: process.env.DATABASE_URL }
+    : {
+        host: process.env.PGHOST || "localhost",
+        port: Number(process.env.PGPORT) || 5432,
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        database: process.env.PGDATABASE || process.env.PGUSER || "postgres",
+      };
+
+  return new Pool({
+    ...config,
+    max: 10,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+  });
 }
 
-if (!pool) {
-  console.warn("Database not connected — using mock");
-  pool = {
-    query: async () => ({ rows: [] }),
-    connect: async () => ({
-      query: async () => ({ rows: [] }),
-      release: () => {},
-    }),
-    end: async () => {},
-  };
-}
+const pool = buildPool();
 
 module.exports = { pool };
