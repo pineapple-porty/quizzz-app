@@ -116,6 +116,16 @@ a {
   transition: color 160ms ease;
 }
 
+.account-greeting {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-logout {
+  font-family: inherit;
+  cursor: pointer;
+}
+
 .site-nav > a:not(.button):hover,
 .footer-top:hover {
   color: var(--color-accent-blue);

@@ -1,15 +1,15 @@
 const { Pool } = require("pg");
 
-function buildPool() {
-  const hasDatabaseConfig = Boolean(
-    process.env.DATABASE_URL ||
-      process.env.PGHOST ||
-      process.env.PGUSER ||
-      process.env.PGDATABASE ||
-      process.env.PGPASSWORD ||
-      process.env.PGPORT,
-  );
+const hasDatabaseConfig = Boolean(
+  process.env.DATABASE_URL ||
+    process.env.PGHOST ||
+    process.env.PGUSER ||
+    process.env.PGDATABASE ||
+    process.env.PGPASSWORD ||
+    process.env.PGPORT,
+);
 
+function buildPool() {
   if (!hasDatabaseConfig) {
     console.warn("Database not connected — using mock");
     return {
@@ -42,4 +42,4 @@ function buildPool() {
 
 const pool = buildPool();
 
-module.exports = { pool };
+module.exports = { hasDatabaseConfig, pool };

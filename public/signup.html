@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#e6eefa">
+    <meta name="description" content="Create a zachs-quiz account and follow your curiosity.">
+    <title>Sign up — zachs-quiz</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400..700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/auth.css">
+    <script src="/auth.js" defer></script>
+  </head>
+  <body class="auth-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="auth-header shell">
+      <a class="brand" href="/" aria-label="zachs-quiz home">
+        <span class="brand-mark" aria-hidden="true">z</span>
+        <span>zachs-quiz</span>
+      </a>
+      <a class="auth-home-link" href="/">Back to home <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main class="auth-main shell" id="main">
+      <section class="auth-frame" aria-labelledby="auth-title">
+        <aside class="auth-aside auth-aside--signup">
+          <p class="eyebrow eyebrow--light"><span aria-hidden="true">✳</span> A LITTLE MORE CURIOUS</p>
+          <h1>Make room<br>for <span>wonder.</span></h1>
+          <p>Big questions, small surprises, and a new reason to say “I didn’t know that.”</p>
+          <span class="auth-aside-mark" aria-hidden="true">!</span>
+        </aside>
+
+        <div class="auth-panel">
+          <div class="auth-panel-heading">
+            <p class="eyebrow">JOIN THE CURIOSITY</p>
+            <h2 id="auth-title">Create your account</h2>
+            <p>Just a username and password. Then you’re in.</p>
+          </div>
+
+          <form class="auth-form" data-auth-action="register" novalidate>
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" autocomplete="username" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" aria-describedby="username-hint" required>
+            <p class="field-hint" id="username-hint">3–20 letters, numbers, or underscores.</p>
+
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" aria-describedby="password-hint" required>
+            <p class="field-hint" id="password-hint">At least 8 characters.</p>
+
+            <label for="confirm-password">Confirm password</label>
+            <input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required>
+
+            <button class="button button--primary auth-submit" type="submit">
+              <span>Create account</span><span aria-hidden="true">↗</span>
+            </button>
+            <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
+          </form>
+
+          <p class="auth-switch">Already have an account? <a href="/login.html">Log in</a></p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
