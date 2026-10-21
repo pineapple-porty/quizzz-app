@@ -951,3 +951,146 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+.account-section {
+  padding: 88px 0;
+  color: #000;
+  background: #e6eefa;
+}
+
+.account-layout {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  align-items: center;
+  gap: 64px;
+}
+
+.account-eyebrow {
+  margin: 0 0 15px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.account-intro h2 {
+  max-width: 430px;
+  margin: 0;
+  font-size: clamp(36px, 4.5vw, 56px);
+  line-height: 1.05;
+}
+
+.account-intro > p:last-child {
+  max-width: 390px;
+  margin: 18px 0 0;
+  line-height: 1.6;
+}
+
+.account-card {
+  padding: clamp(22px, 4vw, 38px);
+  border: 1px solid #000;
+  background: #fff;
+  box-shadow: 8px 8px 0 #000;
+}
+
+.account-status {
+  min-height: 1.5em;
+  margin: 0 0 15px;
+  font-size: 14px;
+}
+
+.account-status[data-error="true"] {
+  font-weight: 700;
+}
+
+.account-forms {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.account-form {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.account-form h3,
+.account-panel h3 {
+  margin: 0 0 9px;
+  font-size: 21px;
+}
+
+.account-form label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-form label span {
+  font-weight: 400;
+}
+
+.account-form input {
+  width: 100%;
+  min-height: 44px;
+  margin-bottom: 7px;
+  padding: 9px 11px;
+  border: 1px solid #000;
+  border-radius: 0;
+  color: #000;
+  background: #fff;
+  font: inherit;
+}
+
+.account-form input:focus-visible,
+.account-button:focus-visible {
+  outline: 3px solid #000;
+  outline-offset: 3px;
+}
+
+.account-button {
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 1px solid #000;
+  border-radius: 4px;
+  color: #fff;
+  background: #000;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.account-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.account-panel[hidden],
+.account-forms[hidden] {
+  display: none;
+}
+
+.account-panel p {
+  margin: 12px 0 22px;
+}
+
+@media (max-width: 820px) {
+  .account-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .account-section {
+    padding: 64px 0;
+  }
+
+  .account-forms {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .account-card {
+    box-shadow: 5px 5px 0 #000;
+  }
+}

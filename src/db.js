@@ -1,6 +1,7 @@
 const { Pool } = require("pg");
 
 let pool;
+let databaseConfigured = false;
 if (process.env.DATABASE_URL) {
   try {
     pool = new Pool({
@@ -9,6 +10,7 @@ if (process.env.DATABASE_URL) {
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 5_000,
     });
+    databaseConfigured = true;
   } catch (err) {
     console.warn("DB not connected — mock active", err);
   }
@@ -26,4 +28,4 @@ if (!pool) {
   };
 }
 
-module.exports = { pool };
+module.exports = { pool, databaseConfigured };
