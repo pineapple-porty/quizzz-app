@@ -28,6 +28,7 @@
         <nav class="site-nav" id="primary-nav" aria-label="Main navigation">
           <a href="#topics">Topics</a>
           <a href="#how-it-works">How it works</a>
+          <a href="#account">Log in</a>
           <a class="button button--small" href="#topics">
             Find a quiz
             <span aria-hidden="true">↗</span>
@@ -153,6 +154,45 @@
               <div><h3>Leave a little smarter</h3><p>Every answer is a chance to learn something fun.</p></div>
             </li>
           </ol>
+        </div>
+      </section>
+
+      <section class="account-section" id="account" aria-labelledby="account-title">
+        <div class="shell account-layout">
+          <div class="account-intro">
+            <p class="account-eyebrow">YOUR QUIZZZZ ACCOUNT</p>
+            <h2 id="account-title">Keep your curiosity close.</h2>
+            <p>Sign in or create an account to get started.</p>
+          </div>
+
+          <div class="account-card">
+            <p class="account-status" id="account-status" role="status" aria-live="polite"></p>
+            <div class="account-forms" id="account-forms">
+              <form class="account-form" id="login-form">
+                <h3>Log in</h3>
+                <label for="login-username">Username</label>
+                <input id="login-username" name="username" type="text" autocomplete="username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+">
+                <label for="login-password">Password</label>
+                <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+                <button class="account-button" type="submit">Log in</button>
+              </form>
+
+              <form class="account-form" id="register-form">
+                <h3>Create an account</h3>
+                <label for="register-username">Username</label>
+                <input id="register-username" name="username" type="text" autocomplete="username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+">
+                <label for="register-password">Password <span>(8 characters or more)</span></label>
+                <input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="8">
+                <button class="account-button" type="submit">Create account</button>
+              </form>
+            </div>
+
+            <div class="account-panel" id="signed-in-panel" hidden>
+              <h3>You’re signed in</h3>
+              <p>Playing as <strong id="signed-in-username"></strong></p>
+              <button class="account-button" id="logout-button" type="button">Log out</button>
+            </div>
+          </div>
         </div>
       </section>
     </main>
