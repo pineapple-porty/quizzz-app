@@ -2,6 +2,7 @@ const path = require("node:path");
 const express = require("express");
 const { pool, databaseConfigured } = require("./src/db");
 const { installAuthRoutes } = require("./src/auth");
+const { installQuizRoutes } = require("./src/quizzes");
 
 function createApp(options = {}) {
   const dbPool = options.pool || pool;
@@ -39,6 +40,10 @@ function createApp(options = {}) {
     databaseConfigured: hasDatabase,
     sessionSecret: options.sessionSecret ?? process.env.SESSION_SECRET,
     secureCookies: options.secureCookies ?? process.env.NODE_ENV === "production",
+  });
+  installQuizRoutes(app, {
+    pool: dbPool,
+    authenticate: auth.authenticate,
   });
 
   app.get("/api/me", auth.authenticate, (request, response) => {

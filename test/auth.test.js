@@ -10,13 +10,85 @@ const SESSION_SECRET = "test-session-secret-with-at-least-32-bytes";
 function createFakePool() {
   const users = new Map();
   const sessions = new Map();
+  const quizzes = [{
+    id: "11111111-1111-4111-8111-111111111111",
+    title: "Sample quiz",
+    description: "A short test quiz.",
+    difficulty: "easy",
+    created_at: new Date().toISOString(),
+  }];
+  const questions = [
+    {
+      id: "22222222-2222-4222-8222-222222222221",
+      quiz_id: quizzes[0].id,
+      position: 1,
+      text: "Which answer is correct for question one?",
+      options: ["Choice A", "Choice B", "Choice C", "Choice D"],
+      correct_index: 2,
+    },
+    {
+      id: "22222222-2222-4222-8222-222222222222",
+      quiz_id: quizzes[0].id,
+      position: 2,
+      text: "Which answer is correct for question two?",
+      options: ["Choice A", "Choice B", "Choice C", "Choice D"],
+      correct_index: 1,
+    },
+    {
+      id: "22222222-2222-4222-8222-222222222223",
+      quiz_id: quizzes[0].id,
+      position: 3,
+      text: "Which answer is correct for question three?",
+      options: ["Choice A", "Choice B", "Choice C", "Choice D"],
+      correct_index: 3,
+    },
+  ];
   let nextUserId = 1;
 
   return {
     users,
     sessions,
+    quizzes,
+    questions,
     async query(sql, parameters = []) {
       const statement = sql.replace(/\s+/g, " ").trim();
+      if (statement.startsWith("SELECT q.id, q.title, q.description, q.difficulty FROM quizzes")) {
+        return {
+          rows: quizzes
+            .filter((quiz) => questions.some((question) => question.quiz_id === quiz.id))
+            .map(({ id, title, description, difficulty }) => ({ id, title, description, difficulty })),
+        };
+      }
+
+      if (statement.startsWith("SELECT q.id, q.title, q.description, q.difficulty, question.id AS question_id")) {
+        const quiz = quizzes.find((item) => item.id === parameters[0]);
+        if (!quiz) return { rows: [] };
+        return {
+          rows: questions
+            .filter((question) => question.quiz_id === quiz.id)
+            .sort((left, right) => left.position - right.position)
+            .map((question) => ({
+              id: quiz.id,
+              title: quiz.title,
+              description: quiz.description,
+              difficulty: quiz.difficulty,
+              question_id: question.id,
+              position: question.position,
+              question_text: question.text,
+              options: question.options,
+            })),
+        };
+      }
+
+      if (statement.startsWith("SELECT id, position, text, options, correct_index FROM questions")) {
+        return {
+          rows: questions
+            .filter((question) => question.quiz_id === parameters[0])
+            .sort((left, right) => left.position - right.position)
+            .map((question) => ({ ...question })),
+        };
+      }
+
       if (statement.startsWith("INSERT INTO users")) {
         const [username, passwordHash] = parameters;
         if (users.has(username)) return { rows: [] };
@@ -107,6 +179,20 @@ async function createHarness({ secureCookies = false, databaseConfigured = true 
     server,
     url: `http://127.0.0.1:${server.address().port}`,
   };
+}
+
+async function createApplicationHarness(pool = createFakePool()) {
+  const app = createApp({
+    pool,
+    databaseConfigured: true,
+    sessionSecret: SESSION_SECRET,
+  });
+  const server = app.listen(0, "127.0.0.1");
+  await new Promise((resolve, reject) => {
+    server.once("listening", resolve);
+    server.once("error", reject);
+  });
+  return { pool, server, url: `http://127.0.0.1:${server.address().port}` };
 }
 
 function cookieFrom(response) {
@@ -282,4 +368,113 @@ test("application starts in mock mode and serves the landing page", async (t) =>
 
   const unauthenticated = await fetch(`${url}/api/me`);
   assert.equal(unauthenticated.status, 503);
+});
+
+test("quiz selection, protected play, grading, validation, and retry work", async (t) => {
+  const harness = await createApplicationHarness();
+  t.after(() => new Promise((resolve, reject) => {
+    harness.server.close((error) => error ? reject(error) : resolve());
+  }));
+
+  const quizId = harness.pool.quizzes[0].id;
+  const catalogResponse = await fetch(`${harness.url}/api/quizzes`);
+  assert.equal(catalogResponse.status, 200);
+  assert.deepEqual(await catalogResponse.json(), [{
+    id: quizId,
+    title: "Sample quiz",
+    description: "A short test quiz.",
+    difficulty: "easy",
+  }]);
+
+  const unauthorizedDetail = await fetch(`${harness.url}/api/quizzes/${quizId}`);
+  assert.equal(unauthorizedDetail.status, 401);
+  const unauthorizedSubmit = await fetch(`${harness.url}/api/quizzes/${quizId}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answers: [2, 1, 3] }),
+  });
+  assert.equal(unauthorizedSubmit.status, 401);
+
+  const registration = await fetch(`${harness.url}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "quiz_player", password: "password123" }),
+  });
+  assert.equal(registration.status, 201);
+  const login = await fetch(`${harness.url}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "quiz_player", password: "password123" }),
+  });
+  const cookie = cookieFrom(login);
+
+  const detail = await fetch(`${harness.url}/api/quizzes/${quizId}`, {
+    headers: { Cookie: cookie },
+  });
+  assert.equal(detail.status, 200);
+  const quiz = await detail.json();
+  assert.equal(quiz.questions.length, 3);
+  for (const question of quiz.questions) {
+    assert.equal(question.options.length, 4);
+    assert.ok(question.options.every((option) => typeof option === "string"));
+    assert.equal(Object.hasOwn(question, "correct_index"), false);
+  }
+  assert.equal(JSON.stringify(quiz).includes("correct_index"), false);
+
+  const correctAndIncorrect = await fetch(`${harness.url}/api/quizzes/${quizId}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: cookie },
+    body: JSON.stringify({ answers: [2, 0, 3], points: 999999 }),
+  });
+  assert.equal(correctAndIncorrect.status, 200);
+  const mixedResult = await correctAndIncorrect.json();
+  assert.equal(mixedResult.correct, 2);
+  assert.equal(mixedResult.total, 3);
+  assert.equal(mixedResult.percent, 66.67);
+  assert.equal(mixedResult.beaten, true);
+  assert.deepEqual(mixedResult.review.map((item) => item.your_answer), [2, 0, 3]);
+  assert.deepEqual(mixedResult.review.map((item) => item.correct_index), [2, 1, 3]);
+  assert.equal(Object.hasOwn(mixedResult, "points_awarded"), false);
+
+  const retry = await fetch(`${harness.url}/api/quizzes/${quizId}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: cookie },
+    body: JSON.stringify({ answers: [0, 0, 0] }),
+  });
+  assert.equal(retry.status, 200);
+  const retryResult = await retry.json();
+  assert.equal(retryResult.correct, 0);
+  assert.equal(retryResult.total, 3);
+  assert.equal(retryResult.percent, 0);
+  assert.equal(retryResult.beaten, false);
+  assert.equal(harness.pool.questions.length, 3);
+
+  for (const answers of [
+    [],
+    [2, 1],
+    [2, 1, 3, 0],
+    [-1, 1, 3],
+    [4, 1, 3],
+    [1.5, 1, 3],
+    ["2", 1, 3],
+  ]) {
+    const invalid = await fetch(`${harness.url}/api/quizzes/${quizId}/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Cookie: cookie },
+      body: JSON.stringify({ answers }),
+    });
+    assert.equal(invalid.status, 400, `expected invalid answers to be rejected: ${JSON.stringify(answers)}`);
+  }
+
+  const malformedBody = await fetch(`${harness.url}/api/quizzes/${quizId}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: cookie },
+    body: JSON.stringify({ answers: "2,1,3" }),
+  });
+  assert.equal(malformedBody.status, 400);
+
+  const missingQuiz = await fetch(`${harness.url}/api/quizzes/33333333-3333-4333-8333-333333333333`, {
+    headers: { Cookie: cookie },
+  });
+  assert.equal(missingQuiz.status, 404);
 });
