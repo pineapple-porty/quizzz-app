@@ -21,3 +21,23 @@ CREATE TABLE IF NOT EXISTS sessions (
   expires_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS quizzes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  difficulty TEXT NOT NULL
+    CHECK (difficulty IN ('noobie', 'easy', 'medium', 'hard', 'very_hard', 'impossible')),
+  base_points INTEGER NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS questions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+  position INTEGER NOT NULL,
+  text TEXT NOT NULL,
+  options JSONB NOT NULL
+    CHECK (jsonb_typeof(options) = 'array' AND jsonb_array_length(options) = 4),
+  correct_index INTEGER NOT NULL CHECK (correct_index BETWEEN 0 AND 3)
+);

@@ -103,30 +103,32 @@
             <p class="section-note">There’s always something new to learn.<br>And something old to finally remember.</p>
           </div>
 
-          <div class="topic-grid">
-            <article class="topic-card topic-card--science">
-              <div class="topic-icon" aria-hidden="true">S<span>✳</span></div>
-              <p class="topic-kicker">THE NATURAL WORLD</p>
-              <h3>Science</h3>
-              <p>Big ideas, tiny details, and the “how is that possible?” stuff.</p>
-              <span class="topic-arrow" aria-hidden="true">↗</span>
-            </article>
+          <p class="quiz-list-status" id="quiz-list-status" role="status" aria-live="polite">Loading quizzes…</p>
+          <div class="quiz-grid" id="quiz-list"></div>
 
-            <article class="topic-card topic-card--history">
-              <div class="topic-icon" aria-hidden="true">H<span>◷</span></div>
-              <p class="topic-kicker">THEN &amp; THERE</p>
-              <h3>History</h3>
-              <p>Plot twists from the past that are stranger than fiction.</p>
-              <span class="topic-arrow" aria-hidden="true">↗</span>
-            </article>
+          <section class="quiz-play-panel" id="quiz-play" aria-labelledby="quiz-title" hidden>
+            <button class="quiz-back-button" id="quiz-back" type="button">← Back to quizzes</button>
+            <p class="quiz-meta" id="quiz-meta"></p>
+            <h3 id="quiz-title"></h3>
+            <p class="quiz-description" id="quiz-description"></p>
+            <p class="quiz-form-status" id="quiz-form-status" role="status" aria-live="polite"></p>
+            <form id="quiz-form">
+              <div class="quiz-question-list" id="quiz-questions"></div>
+              <button class="quiz-action-button" type="submit">Submit answers</button>
+            </form>
+          </section>
 
-            <article class="topic-card topic-card--culture">
-              <div class="topic-icon" aria-hidden="true">P<span>♫</span></div>
-              <p class="topic-kicker">ON YOUR RADAR</p>
-              <h3>Pop culture</h3>
-              <p>Movies, music, and the moments everyone talked about.</p>
-              <span class="topic-arrow" aria-hidden="true">↗</span>
-            </article>
+          <section class="quiz-results" id="quiz-results" aria-labelledby="quiz-results-title" hidden>
+            <p class="quiz-meta">QUIZ COMPLETE</p>
+            <h3 id="quiz-results-title">Your results</h3>
+            <p class="quiz-score" id="quiz-score"></p>
+            <p class="quiz-percent" id="quiz-percent"></p>
+            <h4>Answer review</h4>
+            <ol class="quiz-review" id="quiz-review"></ol>
+            <div class="quiz-result-actions">
+              <button class="quiz-action-button" id="quiz-retry" type="button">Retry quiz</button>
+              <button class="quiz-secondary-button" id="quiz-results-back" type="button">Back to quizzes</button>
+            </div>
           </div>
         </div>
       </section>
