@@ -1,1 +1,1 @@
-- [Git workflow priority](git-workflow-priority.md) — Following AI_docs/git_instructions.md is a top-priority standing instruction.
+- [Git workflow priority](git-workflow-priority.md) — Follow AI_docs/git_instructions.md for Git work; never infer permission to merge or commit to main.

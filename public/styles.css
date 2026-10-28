@@ -1486,3 +1486,195 @@ a {
     box-shadow: 5px 5px 0 #000;
   }
 }
+
+.teacher-apply-main {
+  padding-block: clamp(48px, 8vw, 96px);
+}
+
+.teacher-apply-card {
+  width: min(100%, 680px);
+  margin-inline: auto;
+  padding: clamp(24px, 5vw, 48px);
+  border: 1px solid rgba(32, 44, 35, 0.12);
+  border-radius: 24px;
+  background: #fffdf8;
+  box-shadow: 0 20px 55px rgba(32, 44, 35, 0.1);
+}
+
+.teacher-apply-card h1,
+.teacher-code-panel h2 {
+  margin: 0;
+  color: #202c23;
+  letter-spacing: -0.045em;
+}
+
+.teacher-apply-card h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.teacher-apply-intro,
+.teacher-code-panel > p {
+  color: #626c61;
+  line-height: 1.6;
+}
+
+.teacher-demo-notice {
+  margin-block: 24px;
+  padding: 16px 18px;
+  border: 1px solid #b9d982;
+  border-radius: 12px;
+  color: #354b26;
+  background: #f1f8e7;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.teacher-form {
+  display: grid;
+  gap: 20px;
+}
+
+.teacher-field {
+  display: grid;
+  gap: 8px;
+  color: #202c23;
+  font-weight: 650;
+}
+
+.teacher-field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 1px solid #c9d0c4;
+  border-radius: 10px;
+  color: #202c23;
+  background: #fff;
+  font: inherit;
+}
+
+.teacher-field input:focus-visible,
+.teacher-suggestion:focus-visible,
+.teacher-code-row button:focus-visible {
+  outline: 3px solid #7b9b35;
+  outline-offset: 2px;
+}
+
+.teacher-field input[readonly] {
+  background: #f6f8f3;
+}
+
+.teacher-field-help {
+  margin: 0;
+  color: #687267;
+  font-size: 0.83rem;
+  font-weight: 450;
+}
+
+.teacher-suggestions {
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid #d7ddd3;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.teacher-suggestion {
+  width: 100%;
+  display: block;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid #edf0eb;
+  color: #202c23;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.teacher-suggestion:last-child {
+  border-bottom: 0;
+}
+
+.teacher-suggestion:hover {
+  background: #f1f8e7;
+}
+
+.teacher-selected {
+  margin: 0;
+  color: #425d28;
+  font-size: 0.88rem;
+}
+
+.teacher-form-message {
+  min-height: 1.4em;
+  margin: -8px 0 0;
+  color: #596c41;
+  font-size: 0.9rem;
+}
+
+.teacher-form-message[data-error="true"] {
+  color: #a02c28;
+}
+
+.teacher-submit {
+  width: fit-content;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.teacher-submit:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.teacher-code-panel {
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid #e4e8e0;
+}
+
+.teacher-code-panel h2 {
+  font-size: 1.55rem;
+}
+
+.teacher-username-line {
+  color: #202c23 !important;
+}
+
+.teacher-code-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-block: 16px 26px;
+}
+
+.teacher-code-row code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 13px;
+  border: 1px solid #d7ddd3;
+  border-radius: 10px;
+  color: #202c23;
+  background: #f6f8f3;
+  font-size: 0.9rem;
+}
+
+.teacher-code-row .button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 600px) {
+  .teacher-apply-main {
+    width: min(100% - 28px, 680px);
+  }
+
+  .teacher-apply-card {
+    padding: 24px 18px;
+  }
+
+  .teacher-code-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

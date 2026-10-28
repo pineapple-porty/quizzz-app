@@ -2,6 +2,8 @@ const path = require("node:path");
 const express = require("express");
 const { pool, databaseConfigured } = require("./src/db");
 const { installAuthRoutes } = require("./src/auth");
+const { installTeacherSignupRoutes } = require("./src/teacher-signups");
+const { createTeacherCodeSender } = require("./src/teacher-email");
 const { installQuizRoutes } = require("./src/quizzes");
 const { installAdminRoutes } = require("./src/admin");
 const { levelForPoints } = require("./src/scoring");
@@ -42,6 +44,16 @@ function createApp(options = {}) {
     databaseConfigured: hasDatabase,
     sessionSecret: options.sessionSecret ?? process.env.SESSION_SECRET,
     secureCookies: options.secureCookies ?? process.env.NODE_ENV === "production",
+  });
+  installTeacherSignupRoutes(app, {
+    pool: dbPool,
+    databaseConfigured: hasDatabase,
+    sessionSecret: options.sessionSecret ?? process.env.SESSION_SECRET,
+    secureCookies: options.secureCookies ?? process.env.NODE_ENV === "production",
+    demoMode: options.teacherDemoMode ??
+      (process.env.TEACHER_DEMO_MODE === "true" && process.env.NODE_ENV !== "production"),
+    sendTeacherCode: options.sendTeacherCode ?? createTeacherCodeSender(),
+    emailDomainAllowlist: options.emailDomainAllowlist ?? process.env.TEACHER_EMAIL_DOMAIN_ALLOWLIST,
   });
   installQuizRoutes(app, {
     pool: dbPool,
