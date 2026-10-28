@@ -13,6 +13,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   min-width: 320px;
   margin: 0;
@@ -1146,6 +1150,113 @@ a {
 .quiz-results h4 {
   margin: 0 0 16px;
   font-size: 20px;
+}
+
+.leaderboard-section {
+  padding: 76px 0;
+  background: #f4ede4;
+}
+
+.leaderboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.leaderboard-grid section,
+.teacher-card {
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #000;
+  box-shadow: 5px 5px 0 #000;
+}
+
+.leaderboard-grid h3,
+.teacher-card h2 {
+  margin-top: 0;
+}
+
+.leaderboard-list,
+#assignment-list,
+#player-assignments-list {
+  display: grid;
+  gap: 10px;
+  padding-left: 24px;
+}
+
+.leaderboard-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.teacher-page {
+  padding-block: 48px 80px;
+}
+
+.teacher-page h1 {
+  font-size: clamp(36px, 6vw, 58px);
+}
+
+.teacher-card {
+  margin: 24px 0;
+}
+
+.teacher-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.teacher-form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.teacher-form input,
+.teacher-form textarea,
+.teacher-form select,
+#teacher-quiz-select,
+#assignment-quiz,
+#assignment-player,
+#leaderboard-quiz {
+  min-height: 42px;
+  padding: 8px;
+  border: 1px solid #000;
+  font: inherit;
+}
+
+.teacher-form textarea {
+  min-height: 90px;
+}
+
+.teacher-question-list {
+  display: grid;
+  gap: 16px;
+}
+
+.teacher-question {
+  padding: 16px;
+  border: 1px solid #aaa;
+}
+
+.teacher-tools-link {
+  display: block;
+  margin: 10px 0;
+  font-weight: 700;
+}
+
+@media (max-width: 820px) {
+  .leaderboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .teacher-form {
+    grid-template-columns: 1fr;
+  }
 }
 
 .quiz-review {

@@ -27,6 +27,7 @@
 
         <nav class="site-nav" id="primary-nav" aria-label="Main navigation">
           <a href="#topics">Topics</a>
+          <a href="#leaderboards">Leaderboards</a>
           <a href="#how-it-works">How it works</a>
           <a href="#account">Log in</a>
           <a class="button button--small" href="#topics">
@@ -139,6 +140,32 @@
         </div>
       </section>
 
+      <section class="leaderboard-section" id="leaderboards" aria-labelledby="leaderboards-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">FRIENDLY COMPETITION</p>
+              <h2 id="leaderboards-title">Leaderboards</h2>
+            </div>
+            <label for="leaderboard-quiz">Quiz leaderboard
+              <select id="leaderboard-quiz"><option value="">Choose a quiz</option></select>
+            </label>
+          </div>
+          <div class="leaderboard-grid">
+            <section aria-labelledby="overall-leaderboard-title">
+              <h3 id="overall-leaderboard-title">Most completed quizzes</h3>
+              <p id="overall-leaderboard-status" role="status"></p>
+              <ol id="overall-leaderboard" class="leaderboard-list"></ol>
+            </section>
+            <section aria-labelledby="quiz-leaderboard-title">
+              <h3 id="quiz-leaderboard-title">Top quiz scores</h3>
+              <p id="quiz-leaderboard-status" role="status">Choose a quiz to see scores.</p>
+              <ol id="quiz-leaderboard" class="leaderboard-list"></ol>
+            </section>
+          </div>
+        </div>
+      </section>
+
       <section class="how-section" id="how-it-works" aria-labelledby="how-title">
         <div class="shell how-inner">
           <div class="how-intro">
@@ -198,7 +225,13 @@
             <div class="account-panel" id="signed-in-panel" hidden>
               <h3>You’re signed in</h3>
               <p>Playing as <strong id="signed-in-username"></strong></p>
+              <a class="teacher-tools-link" id="teacher-tools-link" href="/teacher.html" hidden>Open teacher tools</a>
               <button class="account-button" id="logout-button" type="button">Log out</button>
+              <section class="attempt-history" id="player-assignments" aria-labelledby="player-assignments-title" hidden>
+                <h4 id="player-assignments-title">Quizzes assigned to you</h4>
+                <p id="player-assignments-status" role="status"></p>
+                <ul id="player-assignments-list"></ul>
+              </section>
               <section class="attempt-history" id="attempt-history" aria-labelledby="attempt-history-title" hidden>
                 <h4 id="attempt-history-title">Your quiz history</h4>
                 <p id="attempt-history-status" role="status" aria-live="polite"></p>

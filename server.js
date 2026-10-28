@@ -3,6 +3,7 @@ const express = require("express");
 const { pool, databaseConfigured } = require("./src/db");
 const { installAuthRoutes } = require("./src/auth");
 const { installQuizRoutes } = require("./src/quizzes");
+const { installAdminRoutes } = require("./src/admin");
 const { levelForPoints } = require("./src/scoring");
 
 function createApp(options = {}) {
@@ -45,6 +46,11 @@ function createApp(options = {}) {
   installQuizRoutes(app, {
     pool: dbPool,
     authenticate: auth.authenticate,
+  });
+  installAdminRoutes(app, {
+    pool: dbPool,
+    authenticate: auth.authenticate,
+    requireRole: auth.requireRole,
   });
 
   app.get("/api/me", auth.authenticate, (request, response) => {

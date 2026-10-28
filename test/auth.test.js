@@ -125,6 +125,10 @@ function createFakePool() {
         return { rows: [] };
       }
 
+      if (statement.startsWith("UPDATE assignments SET completed_at = now()")) {
+        return { rows: [] };
+      }
+
       if (statement.startsWith("INSERT INTO attempts")) {
         const [user_id, quiz_id, correct, total, beaten, points_awarded, multiplier_applied] = parameters;
         const attempt = {

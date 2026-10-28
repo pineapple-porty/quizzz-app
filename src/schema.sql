@@ -59,3 +59,15 @@ CREATE INDEX IF NOT EXISTS attempts_user_created_idx
 
 CREATE INDEX IF NOT EXISTS attempts_quiz_user_idx
   ON attempts (quiz_id, user_id);
+
+CREATE TABLE IF NOT EXISTS assignments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+  player_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  assigned_by UUID NOT NULL REFERENCES users(id),
+  assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  completed_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS assignments_player_status_idx
+  ON assignments (player_id, completed_at, assigned_at DESC);

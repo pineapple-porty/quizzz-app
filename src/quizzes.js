@@ -195,6 +195,14 @@ function installQuizRoutes(app, { pool, authenticate }) {
            WHERE id = $5`,
           [nextPoints, nextStreak, nextBestStreak, beatenQuizzes, request.user.id],
         );
+        if (beaten) {
+          await client.query(
+            `UPDATE assignments
+             SET completed_at = now()
+             WHERE player_id = $1 AND quiz_id = $2 AND completed_at IS NULL`,
+            [request.user.id, request.params.id],
+          );
+        }
         const attemptResult = await client.query(
           `INSERT INTO attempts
              (user_id, quiz_id, correct, total, beaten, points_awarded, multiplier_applied)
