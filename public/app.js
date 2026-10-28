@@ -38,14 +38,17 @@ function setAccountStatus(message, isError = false) {
   accountStatus.dataset.error = String(isError);
 }
 
-function showAccount(username) {
+function showAccount(username, role = null) {
   if (!accountForms || !signedInPanel || !signedInUsername) return;
   currentUsername = username;
   accountForms.hidden = true;
   signedInPanel.hidden = false;
   signedInUsername.textContent = username;
+  const teacherLink = document.querySelector("#teacher-tools-link");
+  if (teacherLink) teacherLink.hidden = !["teacher", "admin"].includes(role);
   updateQuizButtonLabels();
   loadAttemptHistory();
+  loadPlayerAssignments();
 }
 
 function showAccountForms() {
@@ -55,6 +58,10 @@ function showAccountForms() {
   signedInPanel.hidden = true;
   const attemptHistory = document.querySelector("#attempt-history");
   if (attemptHistory) attemptHistory.hidden = true;
+  const teacherLink = document.querySelector("#teacher-tools-link");
+  if (teacherLink) teacherLink.hidden = true;
+  const assignments = document.querySelector("#player-assignments");
+  if (assignments) assignments.hidden = true;
   updateQuizButtonLabels();
 }
 
@@ -86,7 +93,7 @@ async function submitAccountForm(form, endpoint, onSuccess) {
         password: formData.get("password"),
       }),
     });
-    onSuccess(result);
+    await onSuccess(result);
   } catch (error) {
     setAccountStatus(error.message, true);
   } finally {
@@ -98,8 +105,9 @@ const loginForm = document.querySelector("#login-form");
 if (loginForm) {
   loginForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    submitAccountForm(loginForm, "/api/auth/login", (result) => {
-      showAccount(result.username);
+    submitAccountForm(loginForm, "/api/auth/login", async (result) => {
+      const user = await requestJson("/api/me");
+      showAccount(user.username, user.role);
       setAccountStatus("You’re logged in.");
       loginForm.reset();
     });
@@ -174,6 +182,85 @@ async function loadAttemptHistory() {
   }
 }
 
+async function loadPlayerAssignments() {
+  const section = document.querySelector("#player-assignments");
+  const status = document.querySelector("#player-assignments-status");
+  const list = document.querySelector("#player-assignments-list");
+  if (!section || !status || !list || !currentUsername) return;
+  section.hidden = false;
+  status.textContent = "Loading assignments…";
+  list.replaceChildren();
+  try {
+    const assignments = await requestJson("/api/me/assignments");
+    if (!assignments.length) {
+      status.textContent = "No quizzes have been assigned to you.";
+      return;
+    }
+    status.textContent = "";
+    assignments.forEach((assignment) => {
+      const item = document.createElement("li");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "quiz-secondary-button";
+      button.textContent = assignment.quiz_title;
+      button.addEventListener("click", () => openQuiz(assignment.quiz_id));
+      const state = document.createElement("span");
+      state.textContent = ` — ${assignment.completed_at ? "Completed" : "Not completed"}`;
+      item.append(button, state);
+      list.append(item);
+    });
+  } catch (error) {
+    status.textContent = error.message;
+  }
+}
+
+function appendLeaderboardRows(target, rows, formatter) {
+  target.replaceChildren();
+  rows.forEach((row) => {
+    const item = document.createElement("li");
+    item.textContent = formatter(row);
+    target.append(item);
+  });
+}
+
+async function loadLeaderboards() {
+  const overall = document.querySelector("#overall-leaderboard");
+  const overallStatus = document.querySelector("#overall-leaderboard-status");
+  if (!overall || !overallStatus) return;
+  try {
+    const rows = await requestJson("/api/leaderboard");
+    appendLeaderboardRows(overall, rows, (row) =>
+      `#${row.rank} ${row.username} · ${row.completed_attempts} attempts · Level ${row.level}`,
+    );
+    overallStatus.textContent = rows.length ? "" : "No player results yet.";
+  } catch (error) {
+    overallStatus.textContent = error.message;
+  }
+}
+
+async function loadQuizLeaderboard(quizId) {
+  const list = document.querySelector("#quiz-leaderboard");
+  const status = document.querySelector("#quiz-leaderboard-status");
+  if (!list || !status) return;
+  list.replaceChildren();
+  if (!quizId) {
+    status.textContent = "Choose a quiz to see scores.";
+    return;
+  }
+  try {
+    const rows = await requestJson(`/api/quizzes/${encodeURIComponent(quizId)}/leaderboard`);
+    appendLeaderboardRows(list, rows, (row) =>
+      `#${row.rank} ${row.username} · ${row.highest_score}/${row.total_questions} · ${row.completed_attempts} attempts`,
+    );
+    status.textContent = rows.length ? "" : "No completed attempts for this quiz yet.";
+  } catch (error) {
+    status.textContent = error.message;
+  }
+}
+
+const leaderboardQuiz = document.querySelector("#leaderboard-quiz");
+leaderboardQuiz?.addEventListener("change", () => loadQuizLeaderboard(leaderboardQuiz.value));
+
 const quizList = document.querySelector("#quiz-list");
 const quizListStatus = document.querySelector("#quiz-list-status");
 const quizPlay = document.querySelector("#quiz-play");
@@ -231,6 +318,10 @@ async function loadQuizList() {
       return;
     }
     quizzes.forEach((quiz) => quizList.append(createQuizCard(quiz)));
+    if (leaderboardQuiz) {
+      leaderboardQuiz.replaceChildren(new Option("Choose a quiz", ""));
+      quizzes.forEach((quiz) => leaderboardQuiz.add(new Option(quiz.title, quiz.id)));
+    }
     setQuizListStatus("Choose a quiz to get started.");
   } catch (error) {
     setQuizListStatus(error.message, true);
@@ -371,6 +462,9 @@ quizForm?.addEventListener("submit", async (event) => {
     }
     renderQuizResults(result);
     loadAttemptHistory();
+    loadPlayerAssignments();
+    loadLeaderboards();
+    loadQuizLeaderboard(leaderboardQuiz?.value || "");
   } catch (error) {
     quizFormStatus.textContent = error.message;
   } finally {
@@ -386,7 +480,7 @@ document.querySelector("#quiz-retry")?.addEventListener("click", () => {
 
 if (accountForms && signedInPanel) {
   requestJson("/api/me")
-    .then((user) => showAccount(user.username))
+    .then((user) => showAccount(user.username, user.role))
     .catch((error) => {
       showAccountForms();
       if (error.message !== "Authentication required") {
@@ -396,3 +490,4 @@ if (accountForms && signedInPanel) {
 }
 
 loadQuizList();
+loadLeaderboards();

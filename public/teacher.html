@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Teacher tools — zachs-quiz</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/teacher.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="/">zachs-quiz</a>
+        <a class="text-link" href="/">Back to quizzes</a>
+      </div>
+    </header>
+    <main class="shell teacher-page">
+      <p class="eyebrow">TEACHER WORKSPACE</p>
+      <h1>Quiz tools</h1>
+      <p id="teacher-status" role="status" aria-live="polite">Checking access…</p>
+      <div id="teacher-content" hidden>
+        <section class="teacher-card">
+          <h2>Create a quiz</h2>
+          <p>Base points: Noobie 2–3 · Easy 10–12 · Medium 13–18 · Hard 19–25 · Very hard 25–35 · Impossible 36–50.</p>
+          <form id="create-quiz-form" class="teacher-form">
+            <label>Title<input name="title" required maxlength="200"></label>
+            <label>Description<textarea name="description" maxlength="2000"></textarea></label>
+            <label>Difficulty<select name="difficulty" required>
+              <option value="noobie">Noobie</option><option value="easy">Easy</option>
+              <option value="medium">Medium</option><option value="hard">Hard</option>
+              <option value="very_hard">Very hard</option><option value="impossible">Impossible</option>
+            </select></label>
+            <label>Base points<input name="base_points" type="number" min="2" max="50" required></label>
+            <button class="quiz-action-button">Create quiz</button>
+          </form>
+        </section>
+
+        <section class="teacher-card">
+          <h2>Edit quiz and questions</h2>
+          <label for="teacher-quiz-select">Choose a quiz</label>
+          <select id="teacher-quiz-select"><option value="">Select a quiz</option></select>
+          <form id="edit-quiz-form" class="teacher-form" hidden>
+            <label>Title<input name="title" required maxlength="200"></label>
+            <label>Description<textarea name="description" maxlength="2000"></textarea></label>
+            <label>Difficulty<select name="difficulty" required>
+              <option value="noobie">Noobie</option><option value="easy">Easy</option>
+              <option value="medium">Medium</option><option value="hard">Hard</option>
+              <option value="very_hard">Very hard</option><option value="impossible">Impossible</option>
+            </select></label>
+            <label>Base points<input name="base_points" type="number" min="2" max="50" required></label>
+            <button class="quiz-action-button">Save quiz details</button>
+          </form>
+          <div id="question-list" class="teacher-question-list"></div>
+          <form id="add-question-form" class="teacher-form" hidden>
+            <h3>Add a question</h3>
+            <label>Question<input name="text" required></label>
+            <label>Choice A<input name="choice_a" required></label>
+            <label>Choice B<input name="choice_b" required></label>
+            <label>Choice C<input name="choice_c" required></label>
+            <label>Choice D<input name="choice_d" required></label>
+            <label>Correct choice<select name="correct_index">
+              <option value="0">A</option><option value="1">B</option>
+              <option value="2">C</option><option value="3">D</option>
+            </select></label>
+            <button class="quiz-action-button">Add question</button>
+          </form>
+        </section>
+
+        <section class="teacher-card">
+          <h2>Upload questions from CSV</h2>
+          <p>Columns: question, choice_a, choice_b, choice_c, choice_d, correct_letter</p>
+          <label>CSV file<input id="csv-file" type="file" accept=".csv,text/csv"></label>
+          <button id="csv-preview" class="quiz-secondary-button" type="button">Preview CSV</button>
+          <p id="csv-status" role="status"></p>
+          <ul id="csv-preview-list"></ul>
+          <button id="csv-import" class="quiz-action-button" type="button" disabled>Import valid rows</button>
+        </section>
+
+        <section class="teacher-card">
+          <h2>Manage assignments</h2>
+          <form id="assignment-form" class="teacher-form">
+            <label>Quiz<select name="quiz_id" id="assignment-quiz" required></select></label>
+            <label>Player<select name="player_id" id="assignment-player" required></select></label>
+            <button class="quiz-action-button">Assign quiz</button>
+          </form>
+          <ul id="assignment-list"></ul>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,1 @@
+- [Git workflow priority](git-workflow-priority.md) — Following AI_docs/git_instructions.md is a top-priority standing instruction.
