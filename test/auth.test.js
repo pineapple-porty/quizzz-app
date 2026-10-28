@@ -4,6 +4,7 @@ const express = require("express");
 const { test } = require("node:test");
 const { installAuthRoutes, SESSION_COOKIE } = require("../src/auth");
 const { createApp } = require("../server");
+const { levelForPoints, multiplierForStreak } = require("../src/scoring");
 
 const SESSION_SECRET = "test-session-secret-with-at-least-32-bytes";
 
@@ -15,6 +16,7 @@ function createFakePool() {
     title: "Sample quiz",
     description: "A short test quiz.",
     difficulty: "easy",
+    base_points: 10,
     created_at: new Date().toISOString(),
   }];
   const questions = [
@@ -43,15 +45,19 @@ function createFakePool() {
       correct_index: 3,
     },
   ];
+  const attempts = [];
   let nextUserId = 1;
+  let nextAttemptId = 1;
 
-  return {
+  const pool = {
     users,
     sessions,
     quizzes,
     questions,
+    attempts,
     async query(sql, parameters = []) {
       const statement = sql.replace(/\s+/g, " ").trim();
+      if (["BEGIN", "COMMIT", "ROLLBACK"].includes(statement)) return { rows: [] };
       if (statement.startsWith("SELECT q.id, q.title, q.description, q.difficulty FROM quizzes")) {
         return {
           rows: quizzes
@@ -89,6 +95,72 @@ function createFakePool() {
         };
       }
 
+      if (statement.startsWith("SELECT difficulty, base_points FROM quizzes WHERE id = $1")) {
+        const quiz = quizzes.find((item) => item.id === parameters[0]);
+        return { rows: quiz ? [{ difficulty: quiz.difficulty, base_points: quiz.base_points }] : [] };
+      }
+
+      if (statement.startsWith("SELECT id, points, streak_count, best_streak, beaten_quizzes FROM users")) {
+        const user = [...users.values()].find((item) => item.id === parameters[0]);
+        return {
+          rows: user ? [{
+            id: user.id,
+            points: user.points,
+            streak_count: user.streak_count,
+            best_streak: user.best_streak,
+            beaten_quizzes: [...user.beaten_quizzes],
+          }] : [],
+        };
+      }
+
+      if (statement.startsWith("UPDATE users SET points =")) {
+        const [points, streak, bestStreak, beatenQuizzes, userId] = parameters;
+        const user = [...users.values()].find((item) => item.id === userId);
+        if (user) {
+          user.points = points;
+          user.streak_count = streak;
+          user.best_streak = bestStreak;
+          user.beaten_quizzes = [...beatenQuizzes];
+        }
+        return { rows: [] };
+      }
+
+      if (statement.startsWith("INSERT INTO attempts")) {
+        const [user_id, quiz_id, correct, total, beaten, points_awarded, multiplier_applied] = parameters;
+        const attempt = {
+          id: `attempt-${nextAttemptId++}`,
+          user_id,
+          quiz_id,
+          correct,
+          total,
+          beaten,
+          points_awarded,
+          multiplier_applied,
+          created_at: new Date(Date.now() + attempts.length).toISOString(),
+        };
+        attempts.push(attempt);
+        return { rows: [{ id: attempt.id, created_at: attempt.created_at }] };
+      }
+
+      if (statement.startsWith("SELECT a.quiz_id, q.title AS quiz_title")) {
+        const userAttempts = attempts
+          .filter((attempt) => attempt.user_id === parameters[0])
+          .sort((left, right) => right.created_at.localeCompare(left.created_at))
+          .map((attempt) => {
+            const quiz = quizzes.find((item) => item.id === attempt.quiz_id);
+            return {
+              quiz_id: attempt.quiz_id,
+              quiz_title: quiz?.title,
+              correct: attempt.correct,
+              total: attempt.total,
+              percent: Number(((attempt.correct * 100) / attempt.total).toFixed(2)),
+              points_awarded: attempt.points_awarded,
+              created_at: attempt.created_at,
+            };
+          });
+        return { rows: userAttempts };
+      }
+
       if (statement.startsWith("INSERT INTO users")) {
         const [username, passwordHash] = parameters;
         if (users.has(username)) return { rows: [] };
@@ -102,6 +174,7 @@ function createFakePool() {
           points: 0,
           streak_count: 0,
           best_streak: 0,
+          beaten_quizzes: [],
           created_at: new Date().toISOString(),
           is_suspended: false,
         };
@@ -146,6 +219,11 @@ function createFakePool() {
       throw new Error(`Unexpected query in auth test: ${statement}`);
     },
   };
+  pool.connect = async () => ({
+    query: (sql, parameters = []) => pool.query(sql, parameters),
+    release: () => {},
+  });
+  return pool;
 }
 
 async function createHarness({ secureCookies = false, databaseConfigured = true } = {}) {
@@ -342,6 +420,22 @@ test("production cookies are Secure and unconfigured auth fails explicitly", asy
   assert.deepEqual(await unavailable.json(), { error: "Authentication is unavailable" });
 });
 
+test("streak multipliers and levels follow the documented thresholds", () => {
+  assert.equal(multiplierForStreak(0), 1);
+  assert.equal(multiplierForStreak(1), 1);
+  assert.equal(multiplierForStreak(2), 1.5);
+  assert.equal(multiplierForStreak(3), 1.6);
+  assert.equal(multiplierForStreak(10), 2.4);
+  assert.equal(multiplierForStreak(36), 10);
+  assert.equal(multiplierForStreak(100), 10);
+  assert.equal(levelForPoints(0), 1);
+  assert.equal(levelForPoints(49), 1);
+  assert.equal(levelForPoints(50), 2);
+  assert.equal(levelForPoints(200), 3);
+  assert.equal(levelForPoints(50 * 99 ** 2), 100);
+  assert.equal(levelForPoints(50 * 100 ** 2), 100);
+});
+
 test("application starts in mock mode and serves the landing page", async (t) => {
   const app = createApp({
     pool: createFakePool(),
@@ -432,9 +526,21 @@ test("quiz selection, protected play, grading, validation, and retry work", asyn
   assert.equal(mixedResult.total, 3);
   assert.equal(mixedResult.percent, 66.67);
   assert.equal(mixedResult.beaten, true);
+  assert.equal(mixedResult.points_awarded, 5);
+  assert.equal(mixedResult.multiplier_applied, 1);
+  assert.equal(mixedResult.new_streak, 1);
+  assert.equal(mixedResult.level, 1);
+  assert.ok(mixedResult.attempt_id);
   assert.deepEqual(mixedResult.review.map((item) => item.your_answer), [2, 0, 3]);
   assert.deepEqual(mixedResult.review.map((item) => item.correct_index), [2, 1, 3]);
-  assert.equal(Object.hasOwn(mixedResult, "points_awarded"), false);
+  assert.equal(harness.pool.attempts.length, 1);
+  assert.equal(harness.pool.users.get("quiz_player").points, 5);
+
+  const firstHistory = await fetch(`${harness.url}/api/me/attempts`, {
+    headers: { Cookie: cookie },
+  });
+  assert.equal(firstHistory.status, 200);
+  assert.equal((await firstHistory.json()).length, 1);
 
   const retry = await fetch(`${harness.url}/api/quizzes/${quizId}/submit`, {
     method: "POST",
@@ -447,7 +553,73 @@ test("quiz selection, protected play, grading, validation, and retry work", asyn
   assert.equal(retryResult.total, 3);
   assert.equal(retryResult.percent, 0);
   assert.equal(retryResult.beaten, false);
+  assert.equal(retryResult.points_awarded, 0);
+  assert.equal(retryResult.new_streak, 0);
+  assert.notEqual(retryResult.attempt_id, mixedResult.attempt_id);
+  assert.equal(harness.pool.attempts.length, 2);
   assert.equal(harness.pool.questions.length, 3);
+
+  const beatenReplay = await fetch(`${harness.url}/api/quizzes/${quizId}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: cookie },
+    body: JSON.stringify({ answers: [2, 1, 3] }),
+  });
+  assert.equal(beatenReplay.status, 200);
+  const replayResult = await beatenReplay.json();
+  assert.equal(replayResult.beaten, true);
+  assert.equal(replayResult.points_awarded, 0);
+  assert.equal(replayResult.new_streak, 1);
+  assert.equal(harness.pool.users.get("quiz_player").points, 5);
+  assert.equal(harness.pool.attempts.length, 3);
+
+  const incomplete = await fetch(`${harness.url}/api/quizzes/${quizId}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: cookie },
+    body: JSON.stringify({ answers: [2, 1] }),
+  });
+  assert.equal(incomplete.status, 400);
+  assert.equal(harness.pool.attempts.length, 3);
+
+  const logout = await fetch(`${harness.url}/api/auth/logout`, {
+    method: "POST",
+    headers: { Cookie: cookie },
+  });
+  assert.equal(logout.status, 200);
+  const relogin = await fetch(`${harness.url}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "quiz_player", password: "password123" }),
+  });
+  const reloginCookie = cookieFrom(relogin);
+  const persistedHistory = await fetch(`${harness.url}/api/me/attempts`, {
+    headers: { Cookie: reloginCookie },
+  });
+  assert.equal(persistedHistory.status, 200);
+  assert.equal((await persistedHistory.json()).length, 3);
+  const persistedMe = await fetch(`${harness.url}/api/me`, {
+    headers: { Cookie: reloginCookie },
+  });
+  assert.equal(persistedMe.status, 200);
+  const playerProfile = await persistedMe.json();
+  assert.equal(playerProfile.points, 5);
+  assert.equal(playerProfile.level, 1);
+  assert.equal(playerProfile.streak_count, 1);
+
+  await fetch(`${harness.url}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "other_player", password: "password123" }),
+  });
+  const otherLogin = await fetch(`${harness.url}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "other_player", password: "password123" }),
+  });
+  const otherHistory = await fetch(`${harness.url}/api/me/attempts`, {
+    headers: { Cookie: cookieFrom(otherLogin) },
+  });
+  assert.equal(otherHistory.status, 200);
+  assert.deepEqual(await otherHistory.json(), []);
 
   for (const answers of [
     [],
@@ -460,7 +632,7 @@ test("quiz selection, protected play, grading, validation, and retry work", asyn
   ]) {
     const invalid = await fetch(`${harness.url}/api/quizzes/${quizId}/submit`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Cookie: cookie },
+      headers: { "Content-Type": "application/json", Cookie: reloginCookie },
       body: JSON.stringify({ answers }),
     });
     assert.equal(invalid.status, 400, `expected invalid answers to be rejected: ${JSON.stringify(answers)}`);
@@ -468,13 +640,13 @@ test("quiz selection, protected play, grading, validation, and retry work", asyn
 
   const malformedBody = await fetch(`${harness.url}/api/quizzes/${quizId}/submit`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Cookie: cookie },
+    headers: { "Content-Type": "application/json", Cookie: reloginCookie },
     body: JSON.stringify({ answers: "2,1,3" }),
   });
   assert.equal(malformedBody.status, 400);
 
   const missingQuiz = await fetch(`${harness.url}/api/quizzes/33333333-3333-4333-8333-333333333333`, {
-    headers: { Cookie: cookie },
+    headers: { Cookie: reloginCookie },
   });
   assert.equal(missingQuiz.status, 404);
 });

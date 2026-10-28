@@ -15,7 +15,7 @@ async function setupDatabase() {
 
   const schema = await fs.readFile(path.join(__dirname, "../src/schema.sql"), "utf8");
   await pool.query(schema);
-  console.log("User and session tables are ready.");
+  console.log("Application tables are ready.");
 }
 
 setupDatabase()

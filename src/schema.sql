@@ -41,3 +41,21 @@ CREATE TABLE IF NOT EXISTS questions (
     CHECK (jsonb_typeof(options) = 'array' AND jsonb_array_length(options) = 4),
   correct_index INTEGER NOT NULL CHECK (correct_index BETWEEN 0 AND 3)
 );
+
+CREATE TABLE IF NOT EXISTS attempts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+  correct INTEGER NOT NULL CHECK (correct >= 0),
+  total INTEGER NOT NULL CHECK (total > 0 AND correct <= total),
+  beaten BOOLEAN NOT NULL,
+  points_awarded INTEGER NOT NULL CHECK (points_awarded >= 0),
+  multiplier_applied NUMERIC(4,1) NOT NULL DEFAULT 1.0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS attempts_user_created_idx
+  ON attempts (user_id, created_at DESC, id DESC);
+
+CREATE INDEX IF NOT EXISTS attempts_quiz_user_idx
+  ON attempts (quiz_id, user_id);
