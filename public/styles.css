@@ -1109,6 +1109,40 @@ a {
   letter-spacing: -0.04em;
 }
 
+.quiz-scoring-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: -16px 0 30px;
+  font-weight: 700;
+}
+
+.quiz-scoring-summary p {
+  margin: 0;
+}
+
+.attempt-history {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #000;
+}
+
+.attempt-history h4 {
+  margin: 0 0 10px;
+}
+
+.attempt-history ol {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.attempt-history li p {
+  margin: 3px 0 0;
+  font-size: 14px;
+}
+
 .quiz-results h4 {
   margin: 0 0 16px;
   font-size: 20px;

@@ -123,6 +123,12 @@
             <h3 id="quiz-results-title">Your results</h3>
             <p class="quiz-score" id="quiz-score"></p>
             <p class="quiz-percent" id="quiz-percent"></p>
+            <div class="quiz-scoring-summary" aria-live="polite">
+              <p id="quiz-points"></p>
+              <p id="quiz-multiplier"></p>
+              <p id="quiz-streak"></p>
+              <p id="quiz-level"></p>
+            </div>
             <h4>Answer review</h4>
             <ol class="quiz-review" id="quiz-review"></ol>
             <div class="quiz-result-actions">
@@ -193,6 +199,11 @@
               <h3>You’re signed in</h3>
               <p>Playing as <strong id="signed-in-username"></strong></p>
               <button class="account-button" id="logout-button" type="button">Log out</button>
+              <section class="attempt-history" id="attempt-history" aria-labelledby="attempt-history-title" hidden>
+                <h4 id="attempt-history-title">Your quiz history</h4>
+                <p id="attempt-history-status" role="status" aria-live="polite"></p>
+                <ol id="attempt-history-list"></ol>
+              </section>
             </div>
           </div>
         </div>

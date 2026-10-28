@@ -45,6 +45,7 @@ function showAccount(username) {
   signedInPanel.hidden = false;
   signedInUsername.textContent = username;
   updateQuizButtonLabels();
+  loadAttemptHistory();
 }
 
 function showAccountForms() {
@@ -52,6 +53,8 @@ function showAccountForms() {
   currentUsername = null;
   accountForms.hidden = false;
   signedInPanel.hidden = true;
+  const attemptHistory = document.querySelector("#attempt-history");
+  if (attemptHistory) attemptHistory.hidden = true;
   updateQuizButtonLabels();
 }
 
@@ -135,6 +138,40 @@ function updateQuizButtonLabels() {
   document.querySelectorAll(".quiz-play-button").forEach((button) => {
     button.textContent = currentUsername ? "Start quiz" : "Log in to play";
   });
+}
+
+async function loadAttemptHistory() {
+  const section = document.querySelector("#attempt-history");
+  const status = document.querySelector("#attempt-history-status");
+  const list = document.querySelector("#attempt-history-list");
+  if (!section || !status || !list || !currentUsername) return;
+
+  section.hidden = false;
+  status.textContent = "Loading your quiz history…";
+  list.replaceChildren();
+  try {
+    const attempts = await requestJson("/api/me/attempts");
+    if (attempts.length === 0) {
+      status.textContent = "Completed quizzes will appear here.";
+      return;
+    }
+    status.textContent = "";
+    attempts.forEach((attempt) => {
+      const item = document.createElement("li");
+      const title = document.createElement("strong");
+      title.textContent = attempt.quiz_title;
+      const detail = document.createElement("p");
+      const date = new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(attempt.created_at));
+      detail.textContent = `${attempt.correct}/${attempt.total} correct · ${attempt.percent}% · ${attempt.points_awarded} points · ${date}`;
+      item.append(title, detail);
+      list.append(item);
+    });
+  } catch (error) {
+    status.textContent = error.message;
+  }
 }
 
 const quizList = document.querySelector("#quiz-list");
@@ -284,6 +321,10 @@ function renderQuizResults(result) {
   document.querySelector("#quiz-percent").textContent = `${new Intl.NumberFormat(undefined, {
     maximumFractionDigits: 2,
   }).format(result.percent)}%`;
+  document.querySelector("#quiz-points").textContent = `${result.points_awarded} points earned`;
+  document.querySelector("#quiz-multiplier").textContent = `Multiplier: ×${Number(result.multiplier_applied).toFixed(1)}`;
+  document.querySelector("#quiz-streak").textContent = `Current streak: ${result.new_streak}`;
+  document.querySelector("#quiz-level").textContent = `Level ${result.level}`;
   const reviewList = document.querySelector("#quiz-review");
   reviewList.replaceChildren();
 
@@ -329,6 +370,7 @@ quizForm?.addEventListener("submit", async (event) => {
       throw new Error("The results response was invalid.");
     }
     renderQuizResults(result);
+    loadAttemptHistory();
   } catch (error) {
     quizFormStatus.textContent = error.message;
   } finally {

@@ -3,6 +3,7 @@ const express = require("express");
 const { pool, databaseConfigured } = require("./src/db");
 const { installAuthRoutes } = require("./src/auth");
 const { installQuizRoutes } = require("./src/quizzes");
+const { levelForPoints } = require("./src/scoring");
 
 function createApp(options = {}) {
   const dbPool = options.pool || pool;
@@ -54,7 +55,7 @@ function createApp(options = {}) {
       display_name: user.display_name,
       bio: user.bio,
       points: user.points,
-      level: 1,
+      level: levelForPoints(user.points),
       streak_count: user.streak_count,
       best_streak: user.best_streak,
       created_at: user.created_at,
