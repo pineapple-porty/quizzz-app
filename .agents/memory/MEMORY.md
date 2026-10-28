@@ -1,0 +1,1 @@
+- [Git workflow priority](git-workflow-priority.md) — Follow the project Git protocol as a top-priority requirement for all branch and commit work.

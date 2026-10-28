@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#e8b7b2">
+    <meta name="description" content="Apply for a teacher account on zachs-quiz.">
+    <title>Apply for teacher role — zachs-quiz</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/teacher-apply.js" defer></script>
+  </head>
+  <body class="teacher-apply-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="/" aria-label="zachs-quiz home">
+          <span class="brand-mark" aria-hidden="true">z</span>
+          <span>zachs-quiz</span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="/">Back to home</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="shell teacher-apply-main" id="main">
+      <section class="teacher-apply-card" aria-labelledby="page-title">
+        <p class="eyebrow">TEACHER ACCOUNTS</p>
+        <h1 id="page-title">Apply for teacher role</h1>
+        <p class="teacher-apply-intro">Choose your U.S. school or district, then enter your name and email.</p>
+
+        <aside class="teacher-demo-notice" role="note">
+          <strong>Demo mode:</strong> a one-time code will appear on this page; no email is sent.
+          Demo applications do not verify employment or district email. The directory lists U.S. public schools and districts.
+        </aside>
+
+        <form id="teacher-application-form" class="teacher-form" novalidate>
+          <div class="teacher-field teacher-field--directory">
+            <label for="institution-search">School or district</label>
+            <input
+              id="institution-search"
+              name="institution_search"
+              type="search"
+              autocomplete="off"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded="false"
+              aria-controls="institution-suggestions"
+              aria-describedby="directory-help"
+              placeholder="Start typing a school or district"
+              required
+            >
+            <p class="teacher-field-help" id="directory-help">Searches the NCES public school directory. Select a result.</p>
+            <div class="teacher-suggestions" id="institution-suggestions" role="listbox" hidden></div>
+            <p class="teacher-selected" id="selected-institution" hidden></p>
+          </div>
+
+          <div class="teacher-field">
+            <label for="applicant-name">Name</label>
+            <input id="applicant-name" name="name" type="text" autocomplete="name" maxlength="120" required>
+          </div>
+
+          <div class="teacher-field">
+            <label for="applicant-email">Email</label>
+            <input id="applicant-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+            <p class="teacher-field-help">In demo mode this address is not verified or stored.</p>
+          </div>
+
+          <p class="teacher-form-message" id="application-message" role="status" aria-live="polite"></p>
+          <button class="button button--primary teacher-submit" type="submit">Apply</button>
+        </form>
+
+        <section class="teacher-code-panel" id="teacher-code-panel" aria-labelledby="code-title" hidden>
+          <h2 id="code-title">Your one-time teacher code</h2>
+          <p>Save this code. It is shown once and stays valid until you use it.</p>
+          <p class="teacher-username-line">Your username: <strong id="assigned-username"></strong></p>
+          <div class="teacher-code-row">
+            <code id="assigned-code"></code>
+            <button class="button button--small" id="copy-code" type="button">Copy code</button>
+          </div>
+
+          <form id="teacher-account-form" class="teacher-form" novalidate>
+            <input id="signup-code" name="code" type="hidden">
+            <div class="teacher-field">
+              <label for="teacher-username">Username</label>
+              <input id="teacher-username" name="username" type="text" autocomplete="username" readonly>
+            </div>
+            <div class="teacher-field">
+              <label for="teacher-password">Choose a password</label>
+              <input id="teacher-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+              <p class="teacher-field-help">Use at least 8 characters.</p>
+            </div>
+            <p class="teacher-form-message" id="account-message" role="status" aria-live="polite"></p>
+            <button class="button button--primary teacher-submit" type="submit">Create teacher account</button>
+          </form>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

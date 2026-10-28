@@ -239,4 +239,8 @@ module.exports = {
   installAuthRoutes,
   SESSION_COOKIE,
   SESSION_TTL_SECONDS,
+  digestToken,
+  isValidSessionSecret,
+  preparePassword,
+  writeSessionCookie,
 };

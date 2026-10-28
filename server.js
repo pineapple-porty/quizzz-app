@@ -2,6 +2,7 @@ const path = require("node:path");
 const express = require("express");
 const { pool, databaseConfigured } = require("./src/db");
 const { installAuthRoutes } = require("./src/auth");
+const { installTeacherSignupRoutes } = require("./src/teacher-signups");
 const { installQuizRoutes } = require("./src/quizzes");
 const { levelForPoints } = require("./src/scoring");
 
@@ -41,6 +42,14 @@ function createApp(options = {}) {
     databaseConfigured: hasDatabase,
     sessionSecret: options.sessionSecret ?? process.env.SESSION_SECRET,
     secureCookies: options.secureCookies ?? process.env.NODE_ENV === "production",
+  });
+  installTeacherSignupRoutes(app, {
+    pool: dbPool,
+    databaseConfigured: hasDatabase,
+    sessionSecret: options.sessionSecret ?? process.env.SESSION_SECRET,
+    secureCookies: options.secureCookies ?? process.env.NODE_ENV === "production",
+    demoMode: options.teacherDemoMode ??
+      (process.env.TEACHER_DEMO_MODE === "true" && process.env.NODE_ENV !== "production"),
   });
   installQuizRoutes(app, {
     pool: dbPool,
