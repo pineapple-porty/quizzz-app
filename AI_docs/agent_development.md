@@ -31,7 +31,7 @@ stack: frontend: [HTML, CSS, JavaScript] server: [Node.js, Express] database: Po
 
 The assignment and approved Spec Doc may further constrain these choices. Do not replace the stack without approval.
 
-**Role note:** the database role is `teacher` (see `AI_docs/backend_instructions.md`). Anywhere this file says "admin" or "teacher/admin," it means the `teacher` role. There is no separate admin role.
+**Role note:** the database roles are `player`, `teacher`, and `admin` (see `AI_docs/backend_instructions.md`). Teachers manage quizzes and assignments. Admins inherit all teacher tools and may delete any account except their own or delete quizzes. These deletions remove linked attempts and assignments.
 
 ## 4. Development phases
 
@@ -43,7 +43,7 @@ branch: `phase-1-foundation-auth` required_scope:
 - PostgreSQL connection and schema necessary for the required user system.
 - Registration, login, and logout.
 - Secure password hashing and password verification.
-- Player and teacher/admin roles with role-based restrictions. completion_gate:
+- Player, teacher, and admin roles with role-based restrictions. completion_gate:
 - Server starts in Replit QA and serves the app.
 - Database connection and required tables work in QA.
 - Valid registration, login, and logout work.
@@ -88,12 +88,15 @@ branch: `phase-4-leaderboards-admin` required_scope:
 - Apply Spec Doc rules for ties, retries, display fields, and incomplete attempts.
 - Teacher/admin question editor, including questions and choices.
 - Quiz assignment management as defined in assignment and Spec Doc (see `assignments` table in the backend instructions).
+- Admin-only account and quiz deletion using the approved linked-data behavior.
 - CSV upload with preview, validation, and import. completion_gate:
 - Overall and per-quiz rankings match the required rules on test data.
 - Incomplete attempts never inflate rankings.
 - Player accounts cannot use teacher/admin-only operations.
 - Teacher/admin add/edit, assignments, and CSV preview/validation/import work.
 - Invalid CSV rows show useful errors and do not silently corrupt data.
+- Teachers cannot delete accounts or quizzes; admins cannot delete their own account.
+- Account and quiz deletions remove linked attempts and assignments.
 
 ### Phase 5: Custom features and production readiness
 

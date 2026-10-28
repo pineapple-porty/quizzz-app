@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Teacher tools — zachs-quiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
     <script src="/teacher.js" defer></script>
   </head>
@@ -39,6 +42,8 @@
           <h2>Edit quiz and questions</h2>
           <label for="teacher-quiz-select">Choose a quiz</label>
           <select id="teacher-quiz-select"><option value="">Select a quiz</option></select>
+          <button id="delete-quiz-button" class="quiz-secondary-button" type="button" hidden>Delete selected quiz</button>
+          <p id="delete-quiz-status" role="status"></p>
           <form id="edit-quiz-form" class="teacher-form" hidden>
             <label>Title<input name="title" required maxlength="200"></label>
             <label>Description<textarea name="description" maxlength="2000"></textarea></label>
@@ -84,6 +89,15 @@
             <button class="quiz-action-button">Assign quiz</button>
           </form>
           <ul id="assignment-list"></ul>
+        </section>
+
+        <section id="admin-account-tools" class="teacher-card" hidden>
+          <h2>Manage accounts</h2>
+          <p>Deleting an account permanently removes its attempts and assignments.</p>
+          <label for="admin-user-select">Account</label>
+          <select id="admin-user-select"><option value="">Select an account</option></select>
+          <button id="admin-delete-user" class="quiz-secondary-button" type="button" disabled>Delete selected account</button>
+          <p id="admin-user-status" role="status"></p>
         </section>
       </div>
     </main>

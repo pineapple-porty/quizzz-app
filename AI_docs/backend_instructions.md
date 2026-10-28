@@ -33,7 +33,7 @@
 5. Async handlers use `try/catch`; nothing throws to crash the process.
 6. When a table is created, add it to the schema section below in the same change.
 7. **Scoring, streaks, and levels are computed server-side only.** The client sends answers; the server decides everything else. Client-sent point values are always ignored.
-8. **Role naming:** the database role value is `teacher`. Any doc or instruction that says "admin" or "teacher/admin" refers to the same `teacher` role — there is no separate admin role.
+8. **Role hierarchy:** `player`, `teacher`, and `admin` are distinct roles. Teachers manage quizzes, questions, CSV imports, and assignments. Admins inherit all teacher permissions and may delete any account except their own or delete quizzes. Players cannot perform teacher or admin operations.
 
 ---
 
@@ -46,7 +46,7 @@
 |---|---|---|
 | id | `UUID PRIMARY KEY DEFAULT gen_random_uuid()` | |
 | username | `TEXT UNIQUE NOT NULL` | 3–20 chars, letters/numbers/underscore; **usernames only, never email addresses** |
-| role | `TEXT NOT NULL DEFAULT 'player' CHECK (role IN ('player','teacher'))` | teachers get the admin endpoints |
+| role | `TEXT NOT NULL DEFAULT 'player' CHECK (role IN ('player','teacher','admin'))` | teachers get authoring and assignment tools; admins inherit them and have deletion rights |
 | password_hash | `TEXT NOT NULL` | bcrypt (cost 12); plaintext never stored, logged, or returned |
 | points | `INTEGER NOT NULL DEFAULT 0` | lifetime award total; level is derived from this |
 | streak_count | `INTEGER NOT NULL DEFAULT 0` | consecutive beaten quizzes, at any difficulty |
@@ -82,7 +82,7 @@
 | options | `JSONB NOT NULL` | array of **exactly four** choice strings |
 | correct_index | `INTEGER NOT NULL CHECK (correct_index BETWEEN 0 AND 3)` | exactly one correct answer |
 
-*Quizzes and questions are created and edited by **teacher accounts** through the question editor and CSV upload (see Part 4). Players cannot author content.*
+*Quizzes and questions are created and edited by **teacher and admin accounts** through the question editor and CSV upload (see Part 4). Players cannot author content.*
 
 ### assignments
 | Column | Type | Notes |
@@ -178,16 +178,20 @@ if quiz was lost: awarded = 0 (but retrying a lost quiz for points is allowed)
 * **Login is required to play a quiz.** Logged-out visitors can browse the quiz list and view leaderboards, but must register/log in to start a quiz. Rationale: every completed attempt must be saved with a user — anonymous play cannot satisfy that rule.
 
 ### Roles & permissions
-| Action | Player | Teacher |
-|---|---|---|
-| Play quizzes, earn points/streaks/levels | ✅ | ✅ (scores still count) |
-| View leaderboards and own attempt history | ✅ | ✅ |
-| See quizzes assigned to them / manage assignments | see own | create/manage |
-| Question editor: add/edit questions, choices, correct answers, quiz assignments | ❌ | ✅ |
-| CSV upload with preview & validation | ❌ | ✅ |
+| Action | Player | Teacher | Admin |
+|---|---|---|---|
+| Play quizzes, earn points/streaks/levels | ✅ | ✅ (scores still count) | ✅ (scores still count) |
+| View leaderboards and own attempt history | ✅ | ✅ | ✅ |
+| See quizzes assigned to them / manage assignments | see own | create/manage | create/manage |
+| Question editor: add/edit questions, choices, correct answers, quiz assignments | ❌ | ✅ | ✅ |
+| CSV upload with preview & validation | ❌ | ✅ | ✅ |
+| Delete accounts except the acting admin | ❌ | ❌ | ✅ |
+| Delete quizzes | ❌ | ❌ | ✅ |
 
-* The server checks `role` on every admin endpoint — the client never decides.
-* The first teacher account is promoted manually in the database (one-time setup step).
+* The server checks `role` on every teacher/admin endpoint — the client never decides.
+* Deleting a user removes that user's sessions, attempts, and assignments.
+* Deleting a quiz removes its questions, attempts, and assignments. The UI must warn that these records are permanently deleted.
+* The first admin account is provisioned manually by a trusted operator; normal registration must never accept a client-supplied role.
 
 ### Quiz data & user info (all from the server)
 * Quiz content is fetched from the API — never hardcoded in the frontend.
@@ -212,12 +216,15 @@ if quiz was lost: awarded = 0 (but retrying a lost quiz for points is allowed)
 * When a player beats a quiz, any open assignment for that quiz is marked `completed_at = now()`.
 
 ### Teacher question editor & CSV upload
-* `POST /api/admin/quizzes` — create quiz (title, description, difficulty, base_points)
+* `POST /api/admin/quizzes` — teacher/admin creates quiz (title, description, difficulty, base_points)
 * `PUT /api/admin/quizzes/:id` — edit quiz details
 * `POST /api/admin/quizzes/:id/questions` — add question
 * `PUT /api/admin/questions/:id` — edit question text, choices, correct answer
 * `DELETE /api/admin/questions/:id` — remove question
 * **CSV upload:** `POST /api/admin/quizzes/:id/upload` — teacher uploads a CSV using the standard template (columns: `question,choice_a,choice_b,choice_c,choice_d,correct_letter`). The server returns a **preview**: valid rows plus invalid rows with row numbers and reasons (missing column, not exactly four choices, bad correct letter). Nothing is saved until the teacher confirms; then `POST /api/admin/quizzes/:id/import` imports only the valid rows.
+* `GET /api/admin/users` — admin lists usernames and roles for account management.
+* `DELETE /api/admin/users/:id` — admin deletes any account except their own; linked sessions, attempts, and assignments are removed.
+* `DELETE /api/admin/quizzes/:id` — admin deletes a quiz and its questions, attempts, and assignments.
 
 ### Endpoints (target API)
 * `POST /api/auth/register` → `{ username }` or `409` if taken
@@ -231,7 +238,7 @@ if quiz was lost: awarded = 0 (but retrying a lost quiz for points is allowed)
 * `POST /api/quizzes/:id/submit` → body `{ answers: number[] }` → `{ correct, total, percent, beaten, points_awarded, multiplier_applied, new_streak, level, review: [{ question, your_answer, correct_index }] }` (auth required)
 * `GET /api/leaderboard` → overall leaderboard (public)
 * `GET /api/quizzes/:id/leaderboard` → per-quiz leaderboard (public)
-* Admin endpoints listed in the question editor and assignments sections (teacher role required)
+* Teacher/admin endpoints listed in the question editor and assignments sections (teacher or admin role required); deletion endpoints require admin
 
 ---
 

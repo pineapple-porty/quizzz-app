@@ -105,6 +105,7 @@ function validQuestion(input) {
 
 function installAdminRoutes(app, { pool, authenticate, requireRole }) {
   const teacher = [authenticate, requireRole("teacher", "admin")];
+  const admin = [authenticate, requireRole("admin")];
 
   app.get("/api/admin/quizzes", ...teacher, async (_request, response) => {
     try {
@@ -139,6 +140,93 @@ function installAdminRoutes(app, { pool, authenticate, requireRole }) {
     } catch (error) {
       console.error("Player list failed:", error.message);
       response.status(500).json({ error: "Unable to load players" });
+    }
+  });
+
+  app.get("/api/admin/users", ...admin, async (request, response) => {
+    try {
+      const result = await pool.query(
+        `SELECT id, username, role, (id = $1) AS is_self
+         FROM users
+         ORDER BY username`,
+        [request.user.id],
+      );
+      response.json(result.rows);
+    } catch (error) {
+      console.error("Admin user list failed:", error.message);
+      response.status(500).json({ error: "Unable to load accounts" });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", ...admin, async (request, response) => {
+    const { id } = request.params;
+    if (!UUID_PATTERN.test(id)) {
+      response.status(400).json({ error: "Account ID is invalid" });
+      return;
+    }
+    if (id.toLowerCase() === request.user.id.toLowerCase()) {
+      response.status(400).json({ error: "You cannot delete your own account" });
+      return;
+    }
+
+    let client;
+    let transactionStarted = false;
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      transactionStarted = true;
+      const account = await client.query(
+        "SELECT id FROM users WHERE id = $1 FOR UPDATE",
+        [id],
+      );
+      if (!account.rows.length) {
+        await client.query("ROLLBACK");
+        transactionStarted = false;
+        response.status(404).json({ error: "Account not found" });
+        return;
+      }
+      await client.query(
+        "DELETE FROM assignments WHERE player_id = $1 OR assigned_by = $1",
+        [id],
+      );
+      await client.query("DELETE FROM users WHERE id = $1", [id]);
+      await client.query("COMMIT");
+      transactionStarted = false;
+      response.json({ ok: true });
+    } catch (error) {
+      if (transactionStarted) {
+        try {
+          await client.query("ROLLBACK");
+        } catch (rollbackError) {
+          console.error("Account deletion rollback failed:", rollbackError.message);
+        }
+      }
+      console.error("Admin account deletion failed:", error.message);
+      response.status(500).json({ error: "Unable to delete account" });
+    } finally {
+      client?.release();
+    }
+  });
+
+  app.delete("/api/admin/quizzes/:id", ...admin, async (request, response) => {
+    const { id } = request.params;
+    if (!UUID_PATTERN.test(id)) {
+      response.status(400).json({ error: "Quiz ID is invalid" });
+      return;
+    }
+    try {
+      const result = await pool.query(
+        "DELETE FROM quizzes WHERE id = $1 RETURNING id",
+        [id],
+      );
+      if (!result.rows.length) {
+        response.status(404).json({ error: "Quiz not found" });
+        return;
+      }
+      response.json({ ok: true });
+    } catch (error) {
+      console.error("Admin quiz deletion failed:", error.message);
+      response.status(500).json({ error: "Unable to delete quiz" });
     }
   });
 

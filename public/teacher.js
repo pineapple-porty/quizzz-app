@@ -8,9 +8,16 @@ const csvFile = document.querySelector("#csv-file");
 const csvStatus = document.querySelector("#csv-status");
 const csvPreviewList = document.querySelector("#csv-preview-list");
 const csvImport = document.querySelector("#csv-import");
+const deleteQuizButton = document.querySelector("#delete-quiz-button");
+const deleteQuizStatus = document.querySelector("#delete-quiz-status");
+const adminAccountTools = document.querySelector("#admin-account-tools");
+const adminUserSelect = document.querySelector("#admin-user-select");
+const adminDeleteUserButton = document.querySelector("#admin-delete-user");
+const adminUserStatus = document.querySelector("#admin-user-status");
 let quizzes = [];
 let csvText = "";
 let csvQuizId = "";
+let currentUserRole = null;
 
 async function api(url, options = {}) {
   const response = await fetch(url, options);
@@ -110,6 +117,7 @@ function renderQuestions(questions) {
 
 async function loadSelectedQuiz() {
   const quiz = selectedQuiz();
+  deleteQuizButton.hidden = currentUserRole !== "admin" || !quiz;
   if (!quiz) {
     editForm.hidden = true;
     addQuestionForm.hidden = true;
@@ -283,6 +291,59 @@ async function loadAssignments() {
   });
 }
 
+async function loadAdminUsers() {
+  const users = await api("/api/admin/users");
+  adminUserSelect.replaceChildren(new Option("Select an account", ""));
+  users.forEach((user) => {
+    const label = `${user.username} (${user.role})${user.is_self ? " — you" : ""}`;
+    const option = new Option(label, user.id);
+    option.disabled = user.is_self;
+    adminUserSelect.add(option);
+  });
+  adminDeleteUserButton.disabled = !adminUserSelect.value;
+}
+
+adminUserSelect.addEventListener("change", () => {
+  adminDeleteUserButton.disabled = !adminUserSelect.value ||
+    adminUserSelect.selectedOptions[0]?.disabled === true;
+});
+
+adminDeleteUserButton.addEventListener("click", async () => {
+  const option = adminUserSelect.selectedOptions[0];
+  if (!option || option.disabled || !adminUserSelect.value) return;
+  const accountName = option.textContent.replace(/ \([^)]*\)( — you)?$/, "");
+  if (!confirm(`Delete ${accountName}? Their attempts, assignments, and active sessions will be removed.`)) return;
+  adminDeleteUserButton.disabled = true;
+  try {
+    await api(`/api/admin/users/${adminUserSelect.value}`, { method: "DELETE" });
+    adminUserStatus.textContent = `${accountName} was deleted.`;
+    await loadAdminUsers();
+    await loadAssignments();
+  } catch (error) {
+    adminUserStatus.textContent = error.message;
+    adminDeleteUserButton.disabled = false;
+  }
+});
+
+deleteQuizButton.addEventListener("click", async () => {
+  const quiz = selectedQuiz();
+  if (!quiz || currentUserRole !== "admin") return;
+  const confirmed = confirm(
+    `Delete "${quiz.title}"? Its questions, attempts, and assignments will be permanently removed from history and leaderboards.`,
+  );
+  if (!confirmed) return;
+  deleteQuizButton.disabled = true;
+  try {
+    await api(`/api/admin/quizzes/${quiz.id}`, { method: "DELETE" });
+    deleteQuizStatus.textContent = `"${quiz.title}" and its linked data were deleted.`;
+    await Promise.all([loadQuizzes(), loadAssignments()]);
+  } catch (error) {
+    deleteQuizStatus.textContent = error.message;
+  } finally {
+    deleteQuizButton.disabled = false;
+  }
+});
+
 document.querySelector("#assignment-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
@@ -302,9 +363,15 @@ document.querySelector("#assignment-form").addEventListener("submit", async (eve
   try {
     const user = await api("/api/me");
     if (!["teacher", "admin"].includes(user.role)) throw new Error("Teacher access is required.");
+    currentUserRole = user.role;
     content.hidden = false;
+    adminAccountTools.hidden = user.role !== "admin";
     status.textContent = `Signed in as ${user.username}.`;
-    await Promise.all([loadQuizzes(), loadAssignments()]);
+    await Promise.all([
+      loadQuizzes(),
+      loadAssignments(),
+      ...(user.role === "admin" ? [loadAdminUsers()] : []),
+    ]);
   } catch (error) {
     status.textContent = error.message;
     content.hidden = true;
