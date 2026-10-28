@@ -488,6 +488,8 @@ test("quiz selection, protected play, grading, validation, and retry work", asyn
     body: JSON.stringify({ answers: [2, 1, 3] }),
   });
   assert.equal(unauthorizedSubmit.status, 401);
+  const unauthorizedHistory = await fetch(`${harness.url}/api/me/attempts`);
+  assert.equal(unauthorizedHistory.status, 401);
 
   const registration = await fetch(`${harness.url}/api/auth/register`, {
     method: "POST",
