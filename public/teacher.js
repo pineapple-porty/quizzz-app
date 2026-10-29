@@ -373,7 +373,17 @@ document.querySelector("#assignment-form").addEventListener("submit", async (eve
       ...(user.role === "admin" ? [loadAdminUsers()] : []),
     ]);
   } catch (error) {
-    status.textContent = error.message;
+    if (error.message === "Authentication required") {
+      status.textContent = "Sign in with a teacher or admin account to continue. ";
+      const signInLink = document.createElement("a");
+      signInLink.href = "/#account";
+      signInLink.textContent = "Go to sign in";
+      status.append(signInLink);
+    } else if (error.message === "Teacher access is required.") {
+      status.textContent = "This page is only available to teacher and admin accounts.";
+    } else {
+      status.textContent = error.message;
+    }
     content.hidden = true;
   }
 })();
