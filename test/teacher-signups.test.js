@@ -3,6 +3,8 @@ const { createHash, randomUUID } = require("node:crypto");
 const express = require("express");
 const { test } = require("node:test");
 const { installTeacherSignupRoutes, usernameBase, usernameWithSuffix } = require("../src/teacher-signups");
+const { installAuthRoutes } = require("../src/auth");
+const { installAdminRoutes } = require("../src/admin");
 const {
   isVerifiedInstitutionEmail,
   parseDirectoryResults,
@@ -163,6 +165,18 @@ function createFakePool() {
         store.codes.splice(index, 1);
         return { rowCount: 1, rows: [] };
       }
+      if (statement.startsWith("SELECT s.token, u.id")) {
+        const session = store.sessions.find((row) => row.token === parameters[0]);
+        const user = session && store.users.find((row) => row.id === session.user_id);
+        return { rows: user ? [{ ...user, token: session.token, is_suspended: false }] : [] };
+      }
+      if (statement.startsWith("UPDATE sessions")) {
+        const session = store.sessions.find((row) => row.token === parameters[0]);
+        return { rows: session ? [{ token: session.token }] : [] };
+      }
+      if (statement.startsWith("SELECT q.id, q.title, q.description, q.difficulty")) {
+        return { rows: [] };
+      }
       throw new Error(`Unexpected pool SQL in teacher signup test: ${statement}`);
     },
   };
@@ -172,7 +186,13 @@ function createFakePool() {
 async function withServer(t, options) {
   const app = express();
   app.use(express.json());
+  const auth = installAuthRoutes(app, options);
   installTeacherSignupRoutes(app, options);
+  installAdminRoutes(app, {
+    pool: options.pool,
+    authenticate: auth.authenticate,
+    requireRole: auth.requireRole,
+  });
   const server = app.listen(0);
   t.after(() => new Promise((resolve) => server.close(resolve)));
   await new Promise((resolve) => server.once("listening", resolve));
@@ -282,6 +302,11 @@ test("demo application issues a one-use code and creates a teacher account", asy
   assert.equal(pool.store.codes[0].consumed_at !== null, true);
   assert.equal(pool.store.users.filter((user) => user.role === "teacher").length, 1);
   assert.equal(pool.store.sessions.length, 1);
+  const cookie = registration.headers.get("set-cookie").split(";")[0];
+  const authoringTools = await fetch(`${baseUrl}/api/admin/quizzes`, {
+    headers: { Cookie: cookie },
+  });
+  assert.equal(authoringTools.status, 200);
 
   const replay = await fetch(`${baseUrl}/api/auth/register-teacher`, {
     method: "POST",

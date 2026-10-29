@@ -167,11 +167,11 @@
       codePanel.querySelector(":scope > p").textContent = `You are signed in as ${data.username}. Your code can no longer be used.`;
       codePanel.querySelector(".teacher-code-row").hidden = true;
       accountForm.hidden = true;
-      const homeLink = document.createElement("a");
-      homeLink.className = "button button--primary";
-      homeLink.href = "/";
-      homeLink.textContent = "Return to zachs-quiz";
-      codePanel.append(homeLink);
+      const teacherToolsLink = document.createElement("a");
+      teacherToolsLink.className = "button button--primary";
+      teacherToolsLink.href = "/teacher.html";
+      teacherToolsLink.textContent = "Open teacher tools";
+      codePanel.append(teacherToolsLink);
     } catch (error) {
       setMessage(accountMessage, error.message || "Unable to create your account. Try again.", true);
       button.disabled = false;
